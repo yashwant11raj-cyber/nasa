@@ -50,6 +50,7 @@ Backend after-data, task 1
 - Todo Backend 39: docs/FUTURE_WORK.md written.
 - Full test run (2026-11-15): X of Y test files OK. Failures/skips: (list names, or "none").
 - Extra (after Backend 39): GET /api/trail?ra=..&dec=..&fov=..&mode=..&combine=..&group=.. in main.py. Same checks as /api/frames (check_request, frames_for, stack_for), returns processing.find_moving_dot() results, one entry per frame, numbered like /api/frames: index, obs_time (ISO), found, x, y, png_x, png_y, ra_deg, dec_deg, snr. Fewer than 3 frames, or frames of different sizes, give HTTP 400 with the friendly message. test_trail_api.py checks it (route part + server part).
+- Extra: GET /api/resolve?name=.. in main.py. Uses names.resolve_name with year=2026.0 (RESOLVE_YEAR), so local targets match /api/targets?year=2026. Returns ra_deg, dec_deg, label, source ("local" or "online"), target_id (None for online). NameSearchError gives HTTP 404 with its friendly message; an empty name or one longer than 100 characters (NAME_MAX_CHARS) gives HTTP 400; a missing name gives 422. The work is in resolve_name_address(), a plain function, so test_resolve_api.py tests it with fake online lookups and the server part only uses built-in names: no test uses the internet.
 
 ## In progress
 
@@ -151,6 +152,7 @@ Backend after-data, task 1
 - movers.py thresholds (MOVER_MIN_SNR 6, MOVER_NEIGHBOUR_SNR 2, MOVER_MIN_NEIGHBOURS 1, MOVER_MAX_PER_FRAME 10) are guesses; retune on real data (after-data #24).
 - Tests are run with run_all_tests.py (plain Python, no pytest).
 - /api/trail takes no stretch, match or ref settings (they do not change positions). In mode=difference the trail is worked out on the raw frames, like /api/expected-path and /api/export.csv. mode=stack gives the stacked frame numbers.
+- /api/resolve: local names use the 2026.0 position (what the page needs for /api/frames); online names are whatever the service gives (no proper-motion correction, and they are J2000-ish, so a fast mover found online may be off). The label of an online result is the text the visitor typed, so the page must show it as plain text, never as HTML.
 
 ## Known problems
 
@@ -171,7 +173,7 @@ Backend after-data, task 1
 - FOV limits are enforced by params.py (from config.py).
 - A "+" in a URL means a space, so +04d41m36s loses its sign (still positive).
 - Online name lookup (SkyCoord.from_name) is untested against the real service; CDS was down at the last check. names.py cannot tell "unknown name" from "service down", so its message covers both.
-- The name search (names.py, Backend 12) is still not connected to the URL.
+- The name search is served by /api/resolve.
 - With mock data only the WISE 0855 preset (at its year-2026 position) finds frames; the other 4 presets give 404 ("No images cover this sky position") because the mock sky covers only that patch. This is expected until real data (Backend 25).
 - Positions at a given year use straight-line proper motion only (no parallax); fine for centring a cutout.
 - The 504 (slow data) branch is untested against real data; nothing raises TimeoutError yet. Revisit in after-data #10 (Robust downloading).
@@ -244,6 +246,8 @@ Backend after-data, task 1
 - movers.py does not link spots into tracks, loses very slow movers in the median, may report variable stars, ignores flags, and needs one pixel grid. A real PSF may not satisfy the neighbour rule; retune after-data #24. Not connected to main.py.
 - The offline parts of the three new test files were run with a stub for astropy; the server and mock-data parts have not been run by me; run them and note the result.
 - /api/trail inherits the limits of find_moving_dot: it needs 3 or more frames on one pixel grid (real frames need re-aligning first, after-data #11), a very slow mover is absorbed into the median, and a variable star or artefact can be picked instead of the mover. The server part of test_trail_api.py has not been run by me; run it and note the result.
+- /api/resolve with a name that is not one of the 5 targets calls CDS (SkyCoord.from_name), which was down on 2026-11-15 and has no time limit of its own here; a slow lookup holds one worker thread. A timeout and a request limit are still open (after-data #27). The online path has never been run against the real service. The server part of test_resolve_api.py has not been run by me; run it and note the result.
+- Online names are not on the 5-target list, so with mock data they will give 404 from /api/frames afterwards (no images), which is expected.
 
 ## How to run and test
 

@@ -70,9 +70,18 @@ Base: same origin as the page (http://127.0.0.1:8000). Full interactive docs: /d
    from the top-left, like /api/expected-path. Needs at least 3 frames, otherwise 400.
    In mode=difference the trail is worked out on the raw frames.
 
+10. GET /api/resolve?name=
+    -> {ra_deg, dec_deg, label, source, target_id}
+    source is "local" (one of the 5 presets, works offline, position at 2026.0 like
+    /api/targets?year=2026, target_id is the preset id) or "online" (CDS lookup,
+    may be down or slow, target_id is null, label is the text that was typed).
+    Use ra_deg/dec_deg as ra/dec for /api/frames. The expected path only works when
+    target_id is not null (pass it as target=). Show label with textContent.
+    Errors: 400 empty or longer than 100 characters, 404 name not found or the online
+    service is down (show detail), 422 name missing.
+
 ## NOT available yet (do not build against these)
 
-- Name search (names.py has no URL). Name box only works for the 5 presets.
 - Colour picture: function exists, no endpoint.
 - Spectrum, flags, "is it real?", overlays: no endpoints.
 - Practice game frames: practice files are not served (only /api/practice/check works).

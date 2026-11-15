@@ -38,17 +38,18 @@ On the mock data only the patch around WISE 0855 has images. Use the
 
 ## Web addresses (API)
 
-| Address                         | What it returns                                                                         |
-| ------------------------------- | --------------------------------------------------------------------------------------- |
-| `GET /api/limits`               | Field-of-view minimum, maximum and default (arcminutes)                                 |
-| `GET /api/targets?year=2026`    | The 5 preset targets (positions moved to that year with proper motion)                  |
-| `GET /api/frames`               | The frame list: image links, dates, detector, wavelength, pixel scale, centre           |
-| `GET /api/frames/{index}/image` | One frame as a PNG picture (north up)                                                   |
-| `GET /api/animation.gif`        | All frames as one animated GIF (a download)                                             |
-| `GET /api/export.csv`           | One row per frame with the dot's (or a target's expected) position, as CSV (a download) |
-| `GET /api/trail`                | Where the moving dot is found in each frame (JSON, same numbering as `/api/frames`)     |
-| `GET /api/expected-path`        | Where a preset target should be in each frame (from its proper motion)                  |
-| `GET /api/practice/check`       | Practice game: is a click on a hidden mover?                                            |
+| Address                         | What it returns                                                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/limits`               | Field-of-view minimum, maximum and default (arcminutes)                                                                                        |
+| `GET /api/targets?year=2026`    | The 5 preset targets (positions moved to that year with proper motion)                                                                         |
+| `GET /api/resolve?name=..`      | A target name to RA/Dec. The 5 built-in targets work offline (positions at 2026.0); other names use the online lookup (CDS), which may be down |
+| `GET /api/frames`               | The frame list: image links, dates, detector, wavelength, pixel scale, centre                                                                  |
+| `GET /api/frames/{index}/image` | One frame as a PNG picture (north up)                                                                                                          |
+| `GET /api/animation.gif`        | All frames as one animated GIF (a download)                                                                                                    |
+| `GET /api/export.csv`           | One row per frame with the dot's (or a target's expected) position, as CSV (a download)                                                        |
+| `GET /api/trail`                | Where the moving dot is found in each frame (JSON, same numbering as `/api/frames`)                                                            |
+| `GET /api/expected-path`        | Where a preset target should be in each frame (from its proper motion)                                                                         |
+| `GET /api/practice/check`       | Practice game: is a click on a hidden mover?                                                                                                   |
 
 ### URL settings
 

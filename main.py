@@ -3,6 +3,7 @@
 # Then open  http://127.0.0.1:8000/docs  to try the endpoints in your browser.
 #
 # Jobs:
+#   GET /api/resolve?name=..                                 a target name -> RA/Dec (JSON)
 #   GET /api/trail?...                                       where the moving dot is in each frame (JSON)
 #   GET /api/limits                                          field-of-view limits (JSON)
 #   GET /api/targets?year=..                                 the 5 preset targets (JSON)
@@ -388,6 +389,38 @@ def export_csv_file(
     name = f"spherex_{kind}_{p.ra:.4f}_{p.dec:+.4f}.csv"
     return Response(content=text, media_type="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+NAME_HELP = ("A target name, for example Barnard's Star or WISE 0855. The 5 built-in targets work "
+             "offline. Other names use the online lookup (CDS), which may be down.")
+NAME_MAX_CHARS = 100
+RESOLVE_YEAR = 2026.0     # same year the page uses for /api/targets?year=2026
+
+
+def resolve_name_address(name):
+    """Turn a typed name into a position. Plain function, so tests can call it without a server."""
+    if name is None or not name.strip():
+        raise HTTPException(status_code=400, detail="Please type a name, for example: Barnard's Star")
+    if len(name) > NAME_MAX_CHARS:
+        raise HTTPException(status_code=400,
+                            detail=f"The name is too long (at most {NAME_MAX_CHARS} characters).")
+    try:
+        result = names.resolve_name(name, year=RESOLVE_YEAR)
+    except names.NameSearchError as err:
+        raise HTTPException(status_code=404, detail=str(err))
+    return {
+        "ra_deg": result.ra,
+        "dec_deg": result.dec,
+        "label": result.label,
+        "source": result.source,          # "local" (5 built-in targets) or "online"
+        "target_id": result.target_id,    # preset id for local results, else None
+    }
+
+
+@app.get("/api/resolve")
+def resolve(name: str = Query(..., description=NAME_HELP)):
+    """Name -> RA/Dec in degrees. Local targets are moved to 2026.0 with proper motion,
+    so they match /api/targets?year=2026. Online results are what the service gives."""
+    return resolve_name_address(name)
 
 @app.get("/api/targets")
 def list_targets(year: str | None = Query(None, description=YEAR_HELP)):
