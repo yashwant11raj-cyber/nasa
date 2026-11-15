@@ -68,164 +68,163 @@ This file replaces Todo_List.pdf. Nothing is ticked.
     Follow the IRSA intro tutorial for WISE 0855. Record what you see in DATA_NOTES.md.
 27. [✔] Easy-update design (added) (Part A)
     Keep the release/collection name in config and query live instead of listing files.
-28. [ ] Skip mostly-bad frames (new) (Part A)
-        If a frame is mostly flagged bad, leave it out. Test the idea on mock flags first.
-29. [ ] Flags and metadata (#16) (Part F)
-        Write flags.py that decodes bits using a table you can swap in once real bit meanings are loaded.
-30. [ ] "Is it real?" check (new) (Part F)
-        Compare neighbouring frames. Warn when the detector or wavelength changed, or when flagged pixels sit near the dot.
-31. [ ] Spectrum function (#15) (Part F)
-        Write spectra.py that builds brightness vs wavelength from mock frames at one pixel.
-32. [ ] Spectrum comparison (new) (Part F)
-        Let spectra.py return two spectra (the mover and a fixed star) so they can be plotted together.
-33. [ ] Overlay catalog function (#17) (Part F)
-        Write overlays.py that fetches Gaia/WISE sources with astroquery and returns pixel positions.
-34. [ ] GIF export (#19) (Part C)
-        Add an endpoint or helper that bundles the frames into an animated GIF with Pillow.
-35. [ ] Export a find as CSV (new) (Part C)
-        An endpoint that returns the marked positions, dates and wavelengths as a CSV file.
-36. [ ] Auto-find movers, optional (new) (Part B)
-        Highlight dots that sit in different places across frames. May need a new library, so ask first. Skip if time is short.
-37. [ ] Tests (added) (Part G)
-        Add small tests per part (ask before installing pytest). Run them before each commit.
-38. [ ] README and requirements (M9) (Part G)
-        Document setup, running, URL parameters and the data release used.
-39. [ ] Future-work notes (new) (Part G)
-        A short docs page: automatic mover detection, a "report a find" button, a bigger sky-survey view.
+28. [✔] Skip mostly-bad frames (new) (Part A)
+    If a frame is mostly flagged bad, leave it out. Test the idea on mock flags first.
+29. [✔] Flags and metadata (#16) (Part F)
+    Write flags.py that decodes bits using a table you can swap in once real bit meanings are loaded.
+30. [✔] "Is it real?" check (new) (Part F)
+    Compare neighbouring frames. Warn when the detector or wavelength changed, or when flagged pixels sit near the dot.
+31. [✔] Spectrum function (#15) (Part F)
+    Write spectra.py that builds brightness vs wavelength from mock frames at one pixel.
+32. [✔] Spectrum comparison (new) (Part F)
+    Let spectra.py return two spectra (the mover and a fixed star) so they can be plotted together.
+33. [✔] Overlay catalog function (#17) (Part F)
+    Write overlays.py that fetches Gaia/WISE sources with astroquery and returns pixel positions.
+34. [✔] GIF export (#19) (Part C)
+    Add an endpoint or helper that bundles the frames into an animated GIF with Pillow.
+35. [✔] Export a find as CSV (new) (Part C)
+    An endpoint that returns the marked positions, dates and wavelengths as a CSV file.
+36. [✔] Auto-find movers, optional (new) (Part B)
+    Highlight dots that sit in different places across frames. May need a new library, so ask first. Skip if time is short.
+37. [✔] Tests (added) (Part G)
+    Add small tests per part (ask before installing pytest). Run them before each commit.
+38. [✔] README and requirements (M9) (Part G)
+    Document setup, running, URL parameters and the data release used.
+39. [✔] Future-work notes (new) (Part G)
+    A short docs page: automatic mover detection, a "report a find" button, a bigger sky-survey view.
 
 ---
 
 ## 2. FRONTEND: Do now (before the data)
 
-1. [ ] Page skeleton (M4) (Part D)
-       Create index.html, app.js and style.css with the layout from the design sketch.
-2. [ ] Show one image (#2) (Part D)
-       Fetch one PNG from the API and display it on the page.
-3. [ ] RA/Dec form (#3) (Part D)
-       Add inputs and a Go button so typing new coordinates changes the image.
-4. [ ] Flexible coordinates and name search box (new) (Part D)
-       One box that accepts degrees, sexagesimal text or a name like "Barnard's Star".
-5. [ ] Animation player (#4) (Part D)
-       Add play/pause, a frame slider and a speed control that step through the frames.
-6. [ ] Frame counter and loop toggle (new) (Part D)
-       Show "5 / 12" next to the slider. Add a loop on/off switch.
-7. [ ] Keyboard shortcuts and swipe (new) (Part D)
-       Space = play/pause, arrow keys = step, swipe left/right on phones.
-8. [ ] Preset buttons (#8, #6) (Part D)
-       Create one button per test target, loaded from the targets endpoint.
-9. [ ] URL parameters (#7) (Part D)
-       Read settings from the URL on load. Update the URL whenever settings change.
-10. [ ] Copy-link button (new) (Part D)
-        One click copies the shareable URL.
-11. [ ] FOV control (#9) (Part D)
-        Add a dropdown or slider that reloads the frames at the new size.
-12. [ ] Frame info panel (#10) (Part D)
-        Show date, detector, wavelength and flags status for the frame on screen.
-13. [ ] Wavelength colour strip (new) (Part D)
-        A rainbow bar under the slider showing each frame's wavelength. Click a block to jump to that frame.
-14. [ ] Spinner and errors (#11) (Part D)
-        Show a loading indicator and display the API's friendly error messages.
-15. [ ] Stretch control (#12) (Part D)
-        Add a brightness slider that requests a new stretch from the API.
-16. [ ] Stretch type dropdown (new) (Part D)
-        Choose linear, sqrt, log or asinh. Add a "match background" checkbox.
-17. [ ] Mode switch (#13, #14) (Part D)
-        Add Normal / Difference / Stack buttons that change the request mode.
-18. [ ] Blink compare (new) (Part D)
-        Pick two frames and flip quickly between them, like the Pluto discoverers did.
-19. [ ] Colour picture toggle (new) (Part D)
-        A switch that shows the 3-wavelength colour image instead of grey.
-20. [ ] Embed mode (added) (Part D)
-        Add ?embed=1 to hide the header and extra controls for use inside other pages.
-21. [ ] Marker tool (#18) (Part D)
-        Let users click to place a circle that follows the same sky position through the frames.
-22. [ ] Trail and expected-path toggles (new) (Part D)
-        Draw a line through the dot's positions. Draw a second marker where proper motion says the star should be.
-23. [ ] Hover readout (new) (Part D)
-        Move the mouse over the image to see the pixel's brightness and its RA/Dec.
-24. [ ] Magnifier (new) (Part D)
-        A small zoom lens that enlarges the area under the mouse without reloading.
-25. [ ] GIF download button (#19) (Part D)
-        Add a button that calls the GIF endpoint and saves the file.
-26. [ ] Export CSV button (new) (Part D)
-        Download the marked positions and dates.
-27. [ ] Placeholders for extras (#15-#17) (Part D)
-        Reserve space for the spectrum plot, flags legend and overlay toggle (Aladin Lite or markers).
-28. [ ] "Is it real?" hint (new) (Part D)
-        A small badge on each frame: green = fine, yellow = detector or wavelength changed, red = flagged pixels near the target.
-29. [ ] Design and mobile layout (#20) (Part D)
-        Use a dark theme. Stack controls under the image on phones. Test at narrow widths.
-30. [ ] Polish and accessibility (new) (Part D)
-        Page title and favicon, tooltips on buttons, a "reset view" button, a hidden-until-needed advanced panel, colour-blind-friendly colours, labels for screen readers.
-31. [ ] Beginner tutorial (#20) (Part D)
-        Write a short "how to spot a moving object" panel with simple steps.
-32. [ ] Guided mission (new) (Part D)
-        An interactive step-by-step "find the moving dot" lesson using WISE 0855.
-33. [ ] Practice game page (new) (Part D)
-        Find hidden fake movers in the practice mock data. Shows a score using the answer-check endpoint.
+1. [✔] Page skeleton (M4) (Part D)
+   Create index.html, app.js and style.css with the layout from the design sketch.
+2. [✔] Show one image (#2) (Part D)
+   Fetch one PNG from the API and display it on the page.
+3. [✔] RA/Dec form (#3) (Part D)
+   Add inputs and a Go button so typing new coordinates changes the image.
+4. [✔] Flexible coordinates and name search box (new) (Part D)
+   One box that accepts degrees, sexagesimal text or a name like "Barnard's Star".
+5. [✔] Animation player (#4) (Part D)
+   Add play/pause, a frame slider and a speed control that step through the frames.
+6. [✔] Frame counter and loop toggle (new) (Part D)
+   Show "5 / 12" next to the slider. Add a loop on/off switch.
+7. [✔] Keyboard shortcuts and swipe (new) (Part D)
+   Space = play/pause, arrow keys = step, swipe left/right on phones.
+8. [✔] Preset buttons (#8, #6) (Part D)
+   Create one button per test target, loaded from the targets endpoint.
+9. [✔] URL parameters (#7) (Part D)
+   Read settings from the URL on load. Update the URL whenever settings change. 10.[✔] Copy-link button (new) (Part D)
+   One click copies the shareable URL.
+10. [✔] FOV control (#9) (Part D)
+    Add a dropdown or slider that reloads the frames at the new size.
+11. [✔] Frame info panel (#10) (Part D)
+    Show date, detector, wavelength and flags status for the frame on screen.
+12. [✔] Wavelength colour strip (new) (Part D)
+    A rainbow bar under the slider showing each frame's wavelength. Click a block to jump to that frame.
+13. [✔] Spinner and errors (#11) (Part D)
+    Show a loading indicator and display the API's friendly error messages.
+14. [✔] Stretch control (#12) (Part D)
+    Add a brightness slider that requests a new stretch from the API.
+15. [✔] Stretch type dropdown (new) (Part D)
+    Choose linear, sqrt, log or asinh. Add a "match background" checkbox.
+16. [✔] Mode switch (#13, #14) (Part D)
+    Add Normal / Difference / Stack buttons that change the request mode.
+17. [✔] Blink compare (new) (Part D)
+    Pick two frames and flip quickly between them, like the Pluto discoverers did.
+18. [✔] Colour picture toggle (new) (Part D)
+    A switch that shows the 3-wavelength colour image instead of grey.
+19. [✔] Embed mode (added) (Part D)
+    Add ?embed=1 to hide the header and extra controls for use inside other pages.
+20. [✔] Marker tool (#18) (Part D)
+    Let users click to place a circle that follows the same sky position through the frames.
+21. [✔] Trail and expected-path toggles (new) (Part D)
+    Draw a line through the dot's positions. Draw a second marker where proper motion says the star should be.
+22. [✔] Hover readout (new) (Part D)
+    Move the mouse over the image to see the pixel's brightness and its RA/Dec.
+23. [✔] Magnifier (new) (Part D)
+    A small zoom lens that enlarges the area under the mouse without reloading.
+24. [✔] GIF download button (#19) (Part D)
+    Add a button that calls the GIF endpoint and saves the file.
+25. [✔] Export CSV button (new) (Part D)
+    Download the marked positions and dates.
+26. [✔] Placeholders for extras (#15-#17) (Part D)
+    Reserve space for the spectrum plot, flags legend and overlay toggle (Aladin Lite or markers).
+27. [✔] "Is it real?" hint (new) (Part D)
+    A small badge on each frame: green = fine, yellow = detector or wavelength changed, red = flagged pixels near the target.
+28. [✔] Design and mobile layout (#20) (Part D)
+    Use a dark theme. Stack controls under the image on phones. Test at narrow widths.
+29. [✔] Polish and accessibility (new) (Part D)
+    Page title and favicon, tooltips on buttons, a "reset view" button, a hidden-until-needed advanced panel, colour-blind-friendly colours, labels for screen readers.
+30. [✔] Beginner tutorial (#20) (Part D)
+    Write a short "how to spot a moving object" panel with simple steps.
+31. [✔] Guided mission (new) (Part D)
+    An interactive step-by-step "find the moving dot" lesson using WISE 0855.
+32. [✔] Practice game page (new) (Part D)
+    Find hidden fake movers in the practice mock data. Shows a score using the answer-check endpoint.
 
 ---
 
 ## 3. BACKEND: After the data comes in
 
-1. [ ] Inspect real files (Part A)
-       Open one real cutout, list extensions and header keywords, update FRAME_FORMAT.md if needed.
+1. [✔] Inspect real files (Part A)
+   Open one real cutout, list extensions and header keywords, update FRAME_FORMAT.md if needed.
 2. [ ] Real image search (#5) (Part A)
-       Implement find_images with the SIA query (spherex_qr2), sorted by date.
-3. [ ] Real cutout download (Part A)
-       Implement get_cutout from IRSA's cutout documentation. Do not guess the URL format.
-4. [ ] Read real cutouts (Part A)
-       Pull IMAGE, FLAGS, VARIANCE, WCS, DETECTOR and DATE into the frame format.
-5. [ ] Wavelength map (Part A)
-       Read the WCS-WAVE extension to get the wavelength at each pixel.
-6. [ ] Contract test (Part G)
-       Check that real frames and mock frames have identical keys and types.
-7. [ ] Cleaning (Part A)
-       Handle NaN pixels and mask bad flags using the bit table in the Explanatory Supplement.
-8. [ ] Sort, group, limit (Part A)
-       Order frames by date, group by detector, and cap the number of frames per request.
+       Implement search_images in data_irsa.py with the SIA query (collections from config.SPHEREX_SIA_COLLECTIONS), sorted by t_min.
+3. [✔] Real cutout download (Part A)
+   Implement download_cutout. The link is the SIA access_url plus ?center=RA,DECd&size=DEGREES, verified by download in Backend 26.
+4. [✔] Read real cutouts (Part A)
+   Pull IMAGE, FLAGS, VARIANCE, WCS, DETECTOR and DATE into the frame format.
+5. [✔] Wavelength map (Part A)
+   Read the WCS-WAVE extension to get the wavelength at each pixel.
+6. [✔] Contract test (Part G)
+   Check that real frames and mock frames have identical keys and types.
+7. [✔] Cleaning (Part A)
+   Handle NaN pixels and mask bad flags using the bit table in the Explanatory Supplement.
+8. [✔] Sort, group, limit (Part A)
+   Order frames by date, group by detector, and cap the number of frames per request.
 9. [ ] Skip mostly-bad frames on real flags (new) (Part A)
-       Re-tune the "too many bad pixels" limit using the real flag bits.
-10. [ ] Robust downloading (Part A)
-        Add longer timeouts, retries, caching of real cutouts and "no images" handling.
-11. [ ] Edge cases (Part A, B)
+       Re-tune the "too many bad pixels" limit using the real flag bits. 10.[✔] Robust downloading (Part A)
+       Add longer timeouts, retries, caching of real cutouts and "no images" handling.
+10. [ ] Edge cases (Part A, B)
         Handle targets near image edges, partial cutouts and different pointings.
-12. [ ] WISE 0855 first (Part E)
+11. [ ] WISE 0855 first (Part E)
         Test it end to end, then check the motion direction against its proper motion.
-13. [ ] All 5 targets (#6) (Part E)
+12. [ ] All 5 targets (#6) (Part E)
         Verify each one returns frames. Fix coordinates in targets.py if needed.
-14. [ ] Name search check (new) (Part E)
+13. [ ] Name search check (new) (Part E)
         Confirm all 5 names resolve (locally and through the online lookup) and note whether the CDS service is back.
-15. [ ] Retune processing (Part B)
+14. [ ] Retune processing (Part B)
         Adjust stretch defaults for real units (MJy/sr). Tune difference and stack on real noise.
-16. [ ] Retune background matching and asinh (new) (Part B)
+15. [ ] Retune background matching and asinh (new) (Part B)
         Check both on real frames and adjust the defaults.
-17. [ ] Real flags (#16) (Part F)
+16. [ ] Real flags (#16) (Part F)
         Decode FLAGS with the correct bit meanings and return per-frame contamination info.
-18. [ ] Real "Is it real?" check (new) (Part F)
+17. [ ] Real "Is it real?" check (new) (Part F)
         Use real detector, wavelength and flag information, and tune the warning thresholds.
-19. [ ] Real spectra (#15) (Part F)
+18. [ ] Real spectra (#15) (Part F)
         Build the spectrum from the real wavelength map and fluxes (ask before installing SPXQuery).
-20. [ ] Real spectrum comparison (new) (Part F)
+19. [ ] Real spectrum comparison (new) (Part F)
         Compare WISE 0855 with a nearby fixed star on real data.
-21. [ ] Real overlays (#17) (Part F)
+20. [ ] Real overlays (#17) (Part F)
         Fetch Gaia/WISE sources and account for proper motion between epochs.
-22. [ ] Expected-path check (new) (Part E)
+21. [ ] Expected-path check (new) (Part E)
         Compare the predicted path with the real dot for WISE 0855 and Barnard's Star. Fix any offset.
-23. [ ] Real colour picture (new) (Part B)
+22. [ ] Real colour picture (new) (Part B)
         Choose which 3 bands to use as red, green and blue. Keep detector differences in mind.
-24. [ ] Auto-find test, optional (new) (Part B)
+23. [ ] Auto-find test, optional (new) (Part B)
         Try the mover finder on real frames. Keep it only if it works.
-25. [ ] Export CSV check (new) (Part C)
+24. [ ] Export CSV check (new) (Part C)
         Confirm exported positions and dates match the real frames.
-26. [ ] Update path (added) (Part A)
+25. [ ] Update path (added) (Part A)
         Make switching to a newer release a one-line config change, and test it.
-27. [ ] Performance (Part A, C)
+26. [ ] Performance (Part A, C)
         Measure load time per FOV, limit large requests, and pre-cache the 5 targets for demos.
-28. [ ] Public hosting plan (Part G)
+27. [ ] Public hosting plan (Part G)
         Pick a host, set limits to protect the server, and test from another device.
-29. [ ] Update docs and commit (Part G)
+28. [ ] Update docs and commit (Part G)
         Record what works in PROGRESS.md and DATA_NOTES.md. Update the README.
+29. [ ] Re-align frames and default frame limit (new): resample all cutouts onto one pixel grid, then apply a default limit (for example one detector). Needed before difference, stack, trail, colour, movers and GIF work on real data.
 
 ---
 
@@ -285,3 +284,4 @@ This file replaces Todo_List.pdf. Nothing is ticked.
         Update the mission steps with real WISE 0855 frames and screenshots.
 27. [ ] Demo materials (M9) (Part G)
         Record a demo video, take screenshots and write a short script for judges.
+28. [ ] Many frames (new): load only some frames at first and preload lazily (one position has 258).

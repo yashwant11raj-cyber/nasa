@@ -50,23 +50,75 @@ Base: same origin as the page (http://127.0.0.1:8000). Full interactive docs: /d
 6. GET /api/practice/check?ra=&dec=&frame=
    -> {hit, mover_id, label, frame, radius_arcsec, movers_total}
 
+7. GET /api/animation.gif?ra=&dec=&fov=&stretch=&mode=&match=&ref=&combine=&group=&speed_ms=
+   -> an animated GIF file (download). speed_ms is 20 to 5000 (default 200).
+   More than 50 frames gives 400 with a message suggesting mode=stack.
+
+8. GET /api/export.csv?ra=&dec=&fov=&mode=&combine=&group=&kind=&target=
+   -> a CSV file (download). kind=trail (default) finds the moving dot
+   automatically (needs at least 3 frames on the same grid).
+   kind=expected needs target=<preset id> (e.g. wise0855).
+   Columns: kind, frame, obs_time, detector, wavelength_um, n_stacked, x, y,
+   ra_deg, dec_deg, ok, snr. Empty cell = unknown.
+
+9. GET /api/trail?ra=&dec=&fov=&mode=&combine=&group=
+   Same ra/dec/fov/mode/combine/group as /api/frames, so entry N belongs to frame N.
+   -> {mode, frame_count, trail: [{index, obs_time, found, x, y, png_x, png_y,
+   ra_deg, dec_deg, snr}]}
+   found=false means no dot was found in that frame: x, y, png_x, png_y, ra_deg
+   and dec_deg are then null (skip it when drawing). png_x/png_y are in PNG pixels
+   from the top-left, like /api/expected-path. Needs at least 3 frames, otherwise 400.
+   In mode=difference the trail is worked out on the raw frames.
+
+10. GET /api/resolve?name=
+    -> {ra_deg, dec_deg, label, source, target_id}
+    source is "local" (one of the 5 presets, works offline, position at 2026.0 like
+    /api/targets?year=2026, target_id is the preset id) or "online" (CDS lookup,
+    may be down or slow, target_id is null, label is the text that was typed).
+    Use ra_deg/dec_deg as ra/dec for /api/frames. The expected path only works when
+    target_id is not null (pass it as target=). Show label with textContent.
+    Errors: 400 empty or longer than 100 characters, 404 name not found or the online
+    service is down (show detail), 422 name missing.
+
+11. GET /api/flags?ra=&dec=&fov=&mode=&combine=&group=
+    Same ra/dec/fov/mode/combine/group as /api/frames, so entry N belongs to frame N.
+    -> {mode, frame_count, frames: [{index, status, reasons, detector_changed,
+    wavelength_changed, flagged_names, flag_counts, bad_fraction,
+    contaminated_fraction}], legend: [{bit, value, name, description, category}]}
+    status is "green", "yellow", "red" or "grey" (grey = could not check).
+    reasons is a list of {code, message}: show message as a tooltip (textContent).
+    flag_counts is {flag name: pixel count}; bad_fraction and
+    contaminated_fraction are 0 to 1. They are null when a frame has no flags.
+    legend explains every flag name (category: bad, contaminated or info).
+    Needs no minimum frame count: with fewer than 3 frames the status comes
+    only from detector/wavelength changes (yellow) or is grey.
+
 ## NOT available yet (do not build against these)
 
-- Name search (names.py exists but has no URL). Frontend Task 4: name box only
-  works for the 5 presets via /api/targets until a backend endpoint exists.
-- Motion trail and colour picture: functions exist, no endpoint.
-- Practice game frames (practice files are not served), GIF, CSV, flags,
-  "is it real?", spectrum, overlays: backend tasks 28-35 not done.
+- Colour picture: function exists, no endpoint.
+- Spectrum, overlays: no endpoints. (flags and "is it real?" now exist).
+- Practice game frames: practice files are not served (only /api/practice/check works).
+- Brightness clip levels (black/white point): no parameter.
+- Real SPHEREx data: see below.
 
-## Current data situation (Backend 25-27)
+## Current data situation (after-data #1, #3, #4, #5)
 
 - config.USE_MOCK = True: only the WISE 0855 preset (year-2026 position) returns
   frames. The other 4 presets give 404. This is expected; show the detail message.
 - USE_MOCK = False currently gives 501 "Real data is not connected yet".
+  The backend can now download and read single real cutouts, but it cannot
+  serve a real frame list yet (it still needs a frame limit, robust downloads and
+  re-aligning). Nothing changes for the page until then.
 - `source` in /api/frames is the cache label ("mock" now, later the release name).
   Show it in the info panel.
-- Real data will differ (Backend 26 findings): ~258 images per position
-  (not 12), cutouts differ by a pixel in size, each download takes 13-27 s,
-  and wavelength varies per frame. So the page will later need progress text,
-  a frame limit and retry (Frontend Section 4, tasks 6-7).
-- Hover/marker maths assume north up and east left. Recheck on real data.
+- Real data will differ (checked on 6 real files): about 258 images per position
+  (not 12), cutouts differ by a pixel in size, each download takes 10-30 s,
+  and the wavelength differs per frame (and by 0.01-0.05 um across one picture;
+  wavelength_um in the frame list is the value at the centre). So the page will
+  later need progress text, a frame limit and retry (Frontend Section 4, tasks 6-7).
+- Real frames are rotated by about 160 degrees on the detector (not north-up). The
+  backend will re-align them onto one north-up grid first, so the API still promises
+  north up and east left, and the PNG, png_x/png_y and the hover/marker maths stay as
+  described above. Recheck once real frames are served.
+- The real search service (IRSA SIA) answered 502 on 2026-11-15; if it is down,
+  real-data requests will answer 504 with a friendly message.

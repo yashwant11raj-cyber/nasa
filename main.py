@@ -3,10 +3,15 @@
 # Then open  http://127.0.0.1:8000/docs  to try the endpoints in your browser.
 #
 # Jobs:
+#   GET /api/flags?...    flag counts and "Is it real?" status per frame (JSON)
+#   GET /api/resolve?name=..                                 a target name -> RA/Dec (JSON)
+#   GET /api/trail?...                                       where the moving dot is in each frame (JSON)
 #   GET /api/limits                                          field-of-view limits (JSON)
 #   GET /api/targets?year=..                                 the 5 preset targets (JSON)
 #   GET /api/frames?ra=..&dec=..&fov=..&mode=..&stretch=..&match=..   list of frames (JSON)
 #   GET /api/frames/{index}/image?...                        one frame as a PNG picture
+#   GET /api/animation.gif?...&speed_ms=..                   all frames as one animated GIF (download)
+#   GET /api/export.csv?...&kind=trail|expected&target=..    positions per frame as a CSV file (download)
 #   everything else                                          files from the static/ folder
 #
 # Backend 11: every setting in the address is checked by params.py first.
@@ -36,10 +41,14 @@ import config
 import coords
 import data_mock
 import errors
+import export_csv
+import flags
+import gif_export
 import names
 import params
 import practice_check
 import processing
+import realcheck
 import targets
 
 app = FastAPI(title="SPHEREx Sky Viewer")
@@ -224,8 +233,7 @@ def frame_image(
         grey = processing.stretch_image(frames[index]["image"], mode=p.stretch, limits=limits)
     return Response(content=processing.image_to_png_bytes(grey), media_type="image/png")
 
-TARGET_HELP = ("Which preset target to follow: its id or name, for example wise0855 or "
-               "'Barnard's Star'. Only the 5 built-in targets work here.")
+TARGET_HELP = "Which preset target to follow: its id or name, for example wise0855."
 
 
 @app.get("/api/expected-path")
@@ -262,6 +270,211 @@ def expected_path(
         "frame_count": len(frames),
         "path": path,
     }
+
+@app.get("/api/trail")
+def trail(
+    ra: str = Query(..., description=RA_HELP),
+    dec: str = Query(..., description=DEC_HELP),
+    fov: str | None = Query(None, description=FOV_HELP),
+    mode: str | None = Query(None, description=MODE_HELP),
+    combine: str | None = Query(None, description=COMBINE_HELP),
+    group: str | None = Query(None, description=GROUP_HELP),
+):
+    """Where the moving dot is in each frame (processing.find_moving_dot).
+
+    Use the same ra, dec, fov, mode, combine and group as /api/frames, so
+    entry number N here belongs to frame number N there.
+    """
+    p = check_request(ra, dec, fov, None, mode, None, None, combine, group)
+    frames = frames_for(p)
+    if p.mode == "stack":
+        frames = stack_for(frames, p)            # same frame numbers as /api/frames
+    try:
+        found = processing.find_moving_dot(frames)
+    except ValueError as err:                    # fewer than 3 frames, or frames of different sizes
+        raise HTTPException(status_code=400, detail=str(err))
+    keys = ("index", "found", "x", "y", "png_x", "png_y", "ra_deg", "dec_deg", "snr")
+    entries = []
+    for item in found:
+        entry = {k: item[k] for k in keys}
+        entry["obs_time"] = item["obs_time"].isoformat()
+        entries.append(entry)
+    return {"mode": p.mode, "frame_count": len(frames), "trail": entries}
+
+@app.get("/api/flags")
+def frame_flags(
+    ra: str = Query(..., description=RA_HELP),
+    dec: str = Query(..., description=DEC_HELP),
+    fov: str | None = Query(None, description=FOV_HELP),
+    mode: str | None = Query(None, description=MODE_HELP),
+    combine: str | None = Query(None, description=COMBINE_HELP),
+    group: str | None = Query(None, description=GROUP_HELP),
+):
+    """Flag info and the "Is it real?" traffic light for every frame.
+
+    Use the same ra, dec, fov, mode, combine and group as /api/frames, so
+    entry number N here belongs to frame number N there.
+    """
+    p = check_request(ra, dec, fov, None, mode, None, None, combine, group)
+    frames = frames_for(p)
+    if p.mode == "stack":
+        frames = stack_for(frames, p)            # same frame numbers as /api/frames
+
+    # Dot positions for realcheck. With fewer than 3 frames (or frames of
+    # different sizes) find_moving_dot refuses, so every position stays None:
+    # the status can then still be yellow (detector/wavelength changed) or grey.
+    positions = [None] * len(frames)
+    if len(frames) >= 3:
+        try:
+            found = processing.find_moving_dot(frames)
+            positions = [item if item["found"] else None for item in found]
+        except ValueError:
+            pass
+    try:
+        checks = realcheck.check_frames(frames, positions)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+    entries = []
+    for i, (frame, check) in enumerate(zip(frames, checks)):
+        summary = flags.frame_summary(frame)     # None if the frame has no flags
+        entries.append({
+            "index": i,
+            "status": check["status"],
+            "reasons": check["reasons"],
+            "detector_changed": check["detector_changed"],
+            "wavelength_changed": check["wavelength_changed"],
+            "flagged_names": check["flagged_names"],
+            "flag_counts": summary["flag_counts"] if summary else None,
+            "bad_fraction": summary["bad_fraction"] if summary else None,
+            "contaminated_fraction": summary["contaminated_fraction"] if summary else None,
+        })
+    return {"mode": p.mode, "frame_count": len(frames), "frames": entries,
+            "legend": flags.legend()}
+
+def grey_pictures(p):
+    """ALL frames of one request as grey arrays (same steps as the image endpoint,
+    so a GIF frame looks exactly like the PNG of that frame)."""
+    frames = frames_for(p)
+    if p.match:
+        frames = processing.match_backgrounds(frames)
+    if p.mode == "stack":
+        frames = stack_for(frames, p)
+    if p.mode == "difference":
+        try:
+            frames = processing.difference_frames(frames, p.ref)
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=str(err))
+        limit = processing.shared_difference_limit(frames)
+        return [processing.stretch_difference(f["image"], mode=p.stretch, limit=limit) for f in frames]
+    limits = processing.shared_limits(frames) if p.match else None
+    return [processing.stretch_image(f["image"], mode=p.stretch, limits=limits) for f in frames]
+
+
+SPEED_HELP = (f"Time each frame is shown, in milliseconds, {gif_export.MIN_DURATION_MS} to "
+              f"{gif_export.MAX_DURATION_MS}. Default {gif_export.DEFAULT_DURATION_MS}.")
+KIND_HELP = ("Which positions to export: " + ", ".join(export_csv.KINDS) +
+             ". trail = where the moving dot is found; expected = where a preset target should be (needs target).")
+
+
+@app.get("/api/animation.gif")
+def animation_gif(
+    ra: str = Query(..., description=RA_HELP),
+    dec: str = Query(..., description=DEC_HELP),
+    fov: str | None = Query(None, description=FOV_HELP),
+    stretch: str | None = Query(None, description=STRETCH_HELP),
+    mode: str | None = Query(None, description=MODE_HELP),
+    match: str | None = Query(None, description=MATCH_HELP),
+    ref: str | None = Query(None, description=REF_HELP),
+    combine: str | None = Query(None, description=COMBINE_HELP),
+    group: str | None = Query(None, description=GROUP_HELP),
+    speed_ms: int = Query(gif_export.DEFAULT_DURATION_MS, description=SPEED_HELP),
+):
+    """Every frame of the request as one animated GIF that loops forever."""
+    p = check_request(ra, dec, fov, stretch, mode, match, ref, combine, group)
+    try:
+        gif_export.check_duration(speed_ms)
+        data = gif_export.greys_to_gif_bytes(grey_pictures(p), speed_ms)
+    except ValueError as err:                    # bad speed, or more frames than MAX_FRAMES
+        raise HTTPException(status_code=400, detail=str(err))
+    name = f"spherex_{p.ra:.4f}_{p.dec:+.4f}.gif"
+    return Response(content=data, media_type="image/gif",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.get("/api/export.csv")
+def export_csv_file(
+    ra: str = Query(..., description=RA_HELP),
+    dec: str = Query(..., description=DEC_HELP),
+    fov: str | None = Query(None, description=FOV_HELP),
+    mode: str | None = Query(None, description=MODE_HELP),
+    combine: str | None = Query(None, description=COMBINE_HELP),
+    group: str | None = Query(None, description=GROUP_HELP),
+    kind: str = Query("trail", description=KIND_HELP),
+    target: str | None = Query(None, description=TARGET_HELP + " Only for kind=expected."),
+):
+    """One row per frame (same numbering as /api/frames) as a CSV file."""
+    p = check_request(ra, dec, fov, None, mode, None, None, combine, group)
+    kind = kind.strip().lower()
+    if kind not in export_csv.KINDS:
+        raise HTTPException(status_code=400,
+                            detail=f"Unknown kind '{kind}'. Choose one of: {', '.join(export_csv.KINDS)}.")
+    found = None
+    if kind == "expected":
+        if target is None or not target.strip():
+            raise HTTPException(status_code=400, detail="kind=expected needs a target, for example target=wise0855.")
+        found = names.resolve_local(target)
+        if found is None:
+            labels = ", ".join(t["label"] for t in targets.TARGETS.values())
+            raise HTTPException(status_code=400,
+                                detail=f"'{target}' is not one of the built-in targets ({labels}).")
+    frames = frames_for(p)
+    if p.mode == "stack":
+        frames = stack_for(frames, p)            # same frame numbers as /api/frames
+    try:
+        if kind == "trail":
+            positions = processing.find_moving_dot(frames)
+        else:
+            expected = targets.expected_positions(found.target_id, [f["obs_time"] for f in frames])
+            positions = processing.locate_in_frames(frames, expected)
+        text = export_csv.to_csv_text(export_csv.build_rows(kind, frames, positions))
+    except ValueError as err:                    # for example fewer than 3 frames for a trail
+        raise HTTPException(status_code=400, detail=str(err))
+    name = f"spherex_{kind}_{p.ra:.4f}_{p.dec:+.4f}.csv"
+    return Response(content=text, media_type="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+NAME_HELP = ("A target name, for example Barnard's Star or WISE 0855. The 5 built-in targets work "
+             "offline. Other names use the online lookup (CDS), which may be down.")
+NAME_MAX_CHARS = 100
+RESOLVE_YEAR = 2026.0     # same year the page uses for /api/targets?year=2026
+
+
+def resolve_name_address(name):
+    """Turn a typed name into a position. Plain function, so tests can call it without a server."""
+    if name is None or not name.strip():
+        raise HTTPException(status_code=400, detail="Please type a name, for example: Barnard's Star")
+    if len(name) > NAME_MAX_CHARS:
+        raise HTTPException(status_code=400,
+                            detail=f"The name is too long (at most {NAME_MAX_CHARS} characters).")
+    try:
+        result = names.resolve_name(name, year=RESOLVE_YEAR)
+    except names.NameSearchError as err:
+        raise HTTPException(status_code=404, detail=str(err))
+    return {
+        "ra_deg": result.ra,
+        "dec_deg": result.dec,
+        "label": result.label,
+        "source": result.source,          # "local" (5 built-in targets) or "online"
+        "target_id": result.target_id,    # preset id for local results, else None
+    }
+
+
+@app.get("/api/resolve")
+def resolve(name: str = Query(..., description=NAME_HELP)):
+    """Name -> RA/Dec in degrees. Local targets are moved to 2026.0 with proper motion,
+    so they match /api/targets?year=2026. Online results are what the service gives."""
+    return resolve_name_address(name)
 
 @app.get("/api/targets")
 def list_targets(year: str | None = Query(None, description=YEAR_HELP)):

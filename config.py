@@ -20,7 +20,7 @@ USE_MOCK = True
 RELEASE_NAME = "spherex_dr1_qr3"
 
 # IRSA collection names for the SIA search (names from IRSA's tutorial).
-# NOT used yet: the TAP query does not take a collection. Kept here so a
+# Used by the SIA search (after-data #2). TAP failed with 502 on 2026-11-15, so SIA is the plan.
 # switch to SIA (which lags about a day) is a one-place change.
 # The deep-survey collections are spherex_dr1_deep and spherex_qr3_deep.
 SPHEREX_SIA_COLLECTIONS = ("spherex_dr1", "spherex_qr3")

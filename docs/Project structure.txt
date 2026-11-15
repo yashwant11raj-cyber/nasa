@@ -6,7 +6,7 @@ nsac/
 ├── data_irsa.py         # real data (written later)
 ├── processing.py        # cutouts, stretch, difference, PNG
 ├── targets.py           # the 5 test targets with coordinates
-├── static/
+├── frontend/
 │   ├── index.html
 │   └── app.js
 ├── data/mock/           # fake FITS files

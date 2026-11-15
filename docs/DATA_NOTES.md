@@ -29,6 +29,25 @@
 - FLAGS header holds 22 flag bits (MSKN/MSKD); same list as in IRSA's tutorial.
 - IMAGE (first cutout): 0.0% NaN, min -2.043, median 0.149, max 33.11 MJy/sr.
 - Downloads: 18.5 s, 26.8 s (after one HTTPError retry), 13.5 s per cutout.
-- Picture of the first cutout: (look at cache/test_png/real_first_cutout.png and write here
-  whether WISE 0855 is visible)
+- Picture of the first cutout: the centre is empty. Possible centring or proper-motion problem. Check in after-data #12.
 - Surprises: cutouts differ in size by a pixel; one position has 258 images.
+
+## After-data #3, #4, #5: checked on real data (try_saved_cutouts.py, 2026-11-15)
+
+- IRSA's SIA search answered "502 Proxy Error" on https://irsa.ipac.caltech.edu/SIA/capabilities, so
+  search_images could not be tried (it retried 3 times and raised its planned TimeoutError). The cutout
+  service worked.
+- Download: the known D3 link (center=133.75976461144327,-7.242186d&size=0.1) downloaded in 17.8 s on the
+  first try. Its FLAGS equal the saved D3 file from inspect_real_files.py. The HDUList can be used after
+  closing the file, as long as every extension was read first.
+- read_cutout on the six saved cutouts (one per detector): detector int 1 to 6, shapes (59,58), (59,59),
+  (59,58), (58,58), (59,59), (59,59), obs_time from DATE-OBS (for example D1 2025-05-06T12:20:24.888),
+  centre wavelength equal to the inspect report to 4 decimals (0.9926, 1.5151, 2.3632, 3.3582, 4.2950, 4.9674 um).
+- wavelength_map ranges (um): D1 0.9867-0.9985, D2 1.5058-1.5246, D3 2.3491-2.3773, D4 3.3357-3.3808,
+  D5 4.2855-4.3045, D6 4.9577-4.9771. All inside the nominal band edges. The pixel (x=0, y=0) is the
+  longest wavelength and the (x=0, y=ny-1) corner the shortest, so the wavelength changes mostly along y.
+  The call takes 0.01-0.02 s per cutout.
+- A frame holding a real SIP WCS survives pickle (the cache works with real frames).
+- astropy prints an INFO message ("SIP coefficients were detected, but CTYPE is missing a -SIP suffix")
+  when the spectral "W" WCS is built. It is harmless: sip is set to None for that WCS and the wavelengths match
+  the report. It is not silenced yet.

@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-M1: Mock data generator (preparing: verifying targets first)
+Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA search service down)
 
 ## Done
 
@@ -36,6 +36,31 @@ M1: Mock data generator (preparing: verifying targets first)
 - Todo Backend 25: real data skeleton. data_irsa.py has FRAME_KEYS and four documented, empty functions (search_images, download_cutout, read_cutout, get_frames) that raise NotImplementedError; get_frames has the same signature as data_mock.get_frames. It imports no network library. Not connected to main.py (frames_for still gives 501). The docstrings record the planned mapping from a real file to a frame, based on IRSA's SPHEREx tutorials. test_data_irsa.py checks it.
 - Todo Backend 26: real query by hand (run 2026-11-15, WISE 0855 at its 2026.0 position, 6 arcmin). try_real_query.py now searches with IRSA's SIA service (ROUTE = "sia"), because the tutorial's TAP query failed. It builds the cutout link from the SIA access_url by adding ?center=RA,DECd&size=0.1 (my own inference from the tutorials; it WORKED). It downloaded the first 3 cutouts and printed extensions, date cards, flag bits, pixel scale and wavelength. It writes docs/real_query_report.txt and cache/test_png/real_first_cutout.png. Results are in docs/DATA_NOTES.md.
 - Todo Backend 27: easy-update design. config.py: RELEASE_NAME is now a cache LABEL ("spherex_dr1_qr3", replacing the superseded "spherex_qr2" placeholder) and SPHEREX_SIA_COLLECTIONS lists the wide-survey SIA collections (not used yet). data_irsa.py has size_degrees and build_search_query: the live TAP query text for a position (no network, numbers checked, bandpass must match SPHEREx-D1..D6). No file list is kept anywhere. test_update_design.py checks it (offline).
+- Todo Backend 28: skip mostly-bad frames. quality.py has bad_fraction (share of pixels with data that carry a "bad" flag; NaN pixels not counted; no flags = 0.0; no data at all = 1.0) and drop_mostly_bad(frames, max_fraction=MAX_BAD_FRACTION) which returns (kept, dropped). A frame is dropped when its fraction is GREATER than MAX_BAD_FRACTION (0.5, a guess). Not connected to main.py. test_quality.py checks it (offline parts + mock-data part).
+- Todo Backend 29: flags.py with swappable flag tables (bit number -> name, description, category bad/contaminated/info). MOCK_TABLE (our own bits) and REAL_TABLE_DRAFT (22 real names/descriptions from real_query_report.txt; categories are my guesses). Functions: validate_table, active_table (follows config.USE_MOCK), mask_for, known_mask, decode_value, category_pixels, count_flags, frame_summary, legend. Not connected to main.py. test_flags.py checks it.
+- Todo Backend 30: "Is it real?" check. realcheck.py has check_frames(frames, positions, radius, wave_fraction): per frame a status (red = bad/contaminated flags within NEAR_RADIUS_PIX = 3 of the dot, yellow = detector or wavelength changed from the previous frame, green = nothing found, grey = flags not checkable) plus reasons. WAVELENGTH_CHANGE_FRACTION = 0.05 (guess). Not connected to main.py. test_realcheck.py checks it.
+- Todo Backend 31: spectrum function. spectra.py has spectrum_along_path (one position per frame), spectrum_at_pixel (same pixel in every frame) and spectrum_at_sky (RA/Dec, each frame's own WCS finds the pixel). A reading is the mean of a (2\*half_size+1) square of pixels, leaving out NaN pixels and pixels flagged "bad"; it has flux, error (from VARIANCE), n_pixels, usable and a reason. Results are sorted by wavelength. Not connected to main.py. test_spectra.py checks it. All parts passed live (mock star about 55 in every frame, mock dot about 135).
+- Todo Backend 32: spectrum comparison. spectra.py has compare_spectra(frames, mover_positions, star_ra, star_dec, half_size, normalize) returning {mover, star, normalized, scales}. normalize=True divides each spectrum by its own median. Not connected to main.py. test_spectra.py checks it. One check in the first run failed because my test was wrong (the mock dot moves only about 1 pixel per frame, so a 3x3 square kept catching it); the check was rewritten to read a single pixel in frame 0 and frame 11.
+- Todo Backend 33: overlay catalog function. overlays.py has CATALOGS (gaia, wise: label, epoch, column names), fetch_sources (astroquery; a fetcher can be passed in for tests), normalize_rows, position_at_year (proper motion to the frame's date), place_sources (pixel path per frame, brightest MAX_SOURCES = 300 kept) and get_overlay. OverlayError is a ValueError. Not connected to main.py. test_overlays.py checks it offline with a fake catalogue. Real queries checked by hand on 2026-11-15 with python overlays.py (WISE 0855 position, 6 arcmin): Gaia gave 417 rows, AllWISE gave 777 rows, and every column in CATALOGS exists in both answers.
+- Todo Backend 34: GIF export. gif_export.py (greys_to_gif_bytes, check_duration) turns the grey pictures into one looping GIF using image_to_png_bytes for the flip and enlargement; MAX_FRAMES (50) is enforced here. main.py has grey_pictures(p) (same steps as the image endpoint, for all frames) and GET /api/animation.gif?...&speed_ms=200 (20 to 5000), sent as a download. test_gif_export.py checks it (offline parts + server part).
+- Todo Backend 35: CSV export. export_csv.py (build_rows, to_csv_text; columns kind, frame, obs_time, detector, wavelength_um, n_stacked, x, y, ra_deg, dec_deg, ok, snr). main.py has GET /api/export.csv?...&kind=trail|expected&target=.. (trail = processing.find_moving_dot, expected = targets.expected_positions + locate_in_frames), sent as a download. test_export_csv.py checks it (offline parts + server part).
+- Todo Backend 36: auto-find movers. movers.py (find_candidates): median fixed sky, subtract, local maxima at least 6 sigma with at least 1 direct neighbour above 2 sigma (rejects one-pixel cosmic rays), brightest 10 per frame, with x, y, png_x, png_y, ra_deg, dec_deg, snr. numpy only, no new library. Not connected to main.py. test_movers.py checks it (offline parts + mock-data part).
+- Todo Backend 37: run*all_tests.py runs every test*\*.py (no pytest) and prints a summary; exit code 1 if any file fails.
+- Todo Backend 38: README.md written (setup, run, endpoints, URL settings, data release, tests). requirements.txt unchanged (no new library).
+- Todo Backend 39: docs/FUTURE_WORK.md written.
+- Full test run (2026-11-15): X of Y test files OK. Failures/skips: (list names, or "none").
+- Extra (after Backend 39): GET /api/trail?ra=..&dec=..&fov=..&mode=..&combine=..&group=.. in main.py. Same checks as /api/frames (check_request, frames_for, stack_for), returns processing.find_moving_dot() results, one entry per frame, numbered like /api/frames: index, obs_time (ISO), found, x, y, png_x, png_y, ra_deg, dec_deg, snr. Fewer than 3 frames, or frames of different sizes, give HTTP 400 with the friendly message. test_trail_api.py checks it (route part + server part).
+- Extra: GET /api/resolve?name=.. in main.py. Uses names.resolve_name with year=2026.0 (RESOLVE_YEAR), so local targets match /api/targets?year=2026. Returns ra_deg, dec_deg, label, source ("local" or "online"), target_id (None for online). NameSearchError gives HTTP 404 with its friendly message; an empty name or one longer than 100 characters (NAME_MAX_CHARS) gives HTTP 400; a missing name gives 422. The work is in resolve_name_address(), a plain function, so test_resolve_api.py tests it with fake online lookups and the server part only uses built-in names: no test uses the internet.
+- Extra: GET /api/flags?ra=&dec=&fov=&mode=&combine=&group= in main.py. It uses the same checks and frame numbering as /api/frames. Per frame it returns index, status, reasons, detector_changed, wavelength_changed, flagged_names (from realcheck.check_frames), and flag_counts, bad_fraction, contaminated_fraction (from flags.frame_summary; null if a frame has no flags). It also returns legend (flags.legend()). Dot positions come from processing.find_moving_dot. With fewer than 3 frames, frames of different sizes, or no dot found, positions are None, so the status can still be yellow or grey. test_flags_api.py checks it (route part + server part).
+- After-data #3, #4, #5 (checked on real data, 2026-11-15, try_saved_cutouts.py): download_cutout downloaded the known D3 link in 17.8 s on the first try, and its FLAGS equal the saved D3 file. read_cutout turned all six saved cutouts (one per detector) into frames: exact FRAME_KEYS, detector int, report shapes, float64/int32/float64 native arrays, naive 2025 obs_time from DATE-OBS, centre wavelength equal to the report to 4 decimals. wavelength_map gave a finite per-pixel map of the right shape for all six (corner pixel (x=0, y=0) equals the report; ranges inside the band edges). A real frame with a SIP WCS survives pickle (cache.py). data_irsa.py also has centre_wavelength and mjd_to_datetime. test_data_irsa.py (offline, fakes) was rewritten.
+- After-data #1 (inspect real files): done from docs/real_files_report.txt (inspect_real_files.py, all six detectors). Results are in docs/DATA_NOTES.md (section "After-data #1"). FRAME_FORMAT.md got an "Extra rules found in the real files" section. flags.py: comment fixed (bit n = 1<<n is now verified).
+- After-data #2 (search_images, written, NOT proven on real data): IRSA's SIA service answered 502 Proxy Error on its capabilities endpoint (2026-11-15, same day as the TAP 502). The planned error path worked: 3 tries, then TimeoutError. try_real_frames.py will prove the search and the full chain once IRSA answers.
+- After-data #6: first run of test_contract.py 2026-11-15, everything passed except the mock-versus-real type check (mock flags were '>i4'). Fixed in data_mock.py; rerun to confirm.
+- After-data #7 (cleaning, offline tests pass): cleaning.py has mask_value, flagged_pixels, clean_frame, clean_frames, masked_share. clean_frame returns a NEW frame with NaN in the image and variance where a "bad" flag is set, where the image is not finite, or where the variance is negative or not finite. Contaminated and info flags are not masked by default. test_cleaning.py checks it. Not connected to main.py (data_irsa.get_frames will use it).
+- After-data #8 (sort, group, limit, offline tests pass): selection.py has sort_images, group_by_detector, count_by_detector, spread_pick, choose_images(images, max_frames, detector) -> (chosen, available) and limit_per_detector(images, n). The limit keeps images evenly spread over time (first and last included). test_selection.py uses the real counts (36, 48, 45, 36, 48, 45). Not connected to main.py.
+- After-data #10 (robust downloading, offline tests pass, real run waiting): downloads.py has download_many (parallel, default 4 workers, one failure never stops the others, disk copies in cache/cutout_files/ with only PRIMARY, IMAGE, FLAGS, VARIANCE and WCS-WAVE kept), summarize, require_some (raises TimeoutError when nothing at all arrived, so main.frames_for gives HTTP 504), clear_files. data_irsa.py now hides astropy's INFO note about "-SIP" (astropy_log.setLevel("WARNING")). test_downloads.py checks it (the disk part needs astropy). "No images" is handled by search_images -> [] -> choose_images -> ([], 0) -> HTTP 404.
+- After-data #9 (skip mostly-bad frames on real flags): NOT done. try_real_batch.py is written (it also runs #6, #7, #8, #10 on real data and prints the bad fraction of every frame with three flag-table variants). Waiting for its output.
+- data_mock.py: load_mock_frame converts flags to native int32 (the first contract run showed mock '>i4' against real 'int32'). data_irsa.py: astropy_log.setLevel("WARNING"). Run python cache.py clear.
 
 ## In progress
 
@@ -43,7 +68,7 @@ M1: Mock data generator (preparing: verifying targets first)
 
 ## Next step
 
-Todo Backend 28: Skip mostly-bad frames (waiting for go-ahead)
+- Run python test_contract.py after the fix, then python try_real_batch.py and paste the output.
 
 ## Decisions made
 
@@ -119,10 +144,41 @@ Todo Backend 28: Skip mostly-bad frames (waiting for go-ahead)
 - A cutout link is the SIA access_url plus ?center=RA,DECd&size=SIZE. size is in DEGREES (0.1 gave 58-59 pixels of 6.15 arcsec, so 0.1 deg = 6 arcmin). Verified by download.
 - Observation time: SIA column t_min is an MJD (60800.700028 = 2025-05-05T16:48:02, equal to the header cards MJD-OBS and DATE-OBS). The IMAGE header also has DATE-BEG, DATE-AVG, DATE-END and TIMESYS=UTC. The DATE card is the PROCESSING date (2026-07-17 for a 2025-05-05 observation), NOT the observation time.
 - Bandpass names are SPHEREx-D1 to SPHEREx-D6 (confirmed in the SIA results: 36, 48, 45, 36, 48, 45 images, 258 in total).
-- Real cutout structure: PRIMARY (no data, has VERSION), IMAGE (MJy/sr), FLAGS (int32), VARIANCE, ZODI, EPSF, WCS-WAVE, all the same size inside one cutout. The FLAGS header keeps the flag table: 22 bits (MSKN/MSKD cards: 0, 1, 2, 6, 7, 9, 10, 11, 12, 14, 15, 17, 19-28). I assume bit n has value 2\*\*n (not checked).
+- Real cutout structure: PRIMARY (no data, has VERSION), IMAGE (MJy/sr), FLAGS (int32), VARIANCE, ZODI, EPSF, WCS-WAVE, all the same size inside one cutout. The FLAGS header keeps the flag table: 22 bits (MSKN/MSKD cards: 0, 1, 2, 6, 7, 9, 10, 11, 12, 14, 15, 17, 19-28). verified by the MSKM header cards.
 - A cutout is centred within about 0.5 pixel of the requested position; the pixel scale is 6.15 to 6.16 arcsec (the mock uses 6.2).
-- Real image search is LIVE: every request asks IRSA through TAP (it sees new weekly data right after ingestion; SIA lags about a day). The query is not filtered by release, so new data needs no code change. To start a fresh cache for a new release, change RELEASE_NAME (one line).
+- Real image search is LIVE: search uses SIA for now, because TAP failed twice with 502. (it sees new weekly data right after ingestion; SIA lags about a day). The query is not filtered by release, so new data needs no code change. To start a fresh cache for a new release, change RELEASE_NAME (one line).
 - Only numbers (range-checked) and a bandpass matching SPHEREx-D1..D6 are put into the query text.
+- Flag tables are keyed by bit NUMBER; the value is 1 << bit. verified by the MSKM header cards. Real categories (bad/contaminated/info) are my guesses: replace them with the IRSA Explanatory Supplement table (after-data #7, #17).
+- Frame quality: only pixels with data are counted; the NaN edge of a cutout is "no data", not "bad data". Cosmic rays count as "bad" in the mock table.
+- "Is it real?" colours: red > yellow > green; grey = could not check. Positions are passed in (find_moving_dot or locate_in_frames), never computed inside realcheck.py. "Near" uses image[y, x] with y counted from the bottom row, like the rest of the project.
+- Spectrum reading = mean of a small square of pixels, leaving out NaN and "bad"-flagged pixels (contaminated pixels are kept). Spectra are sorted by wavelength. No background subtraction yet.
+- compare_spectra takes the mover's pixel positions per frame (find_moving_dot output works) and the fixed star's RA/Dec. normalize divides by the median flux.
+- Overlay sources are moved to each frame's date with straight-line proper motion (no parallax). A source with no proper motion is not moved (pm_known = False). Sources outside every frame are dropped.
+- The overlay search radius = cutout half-diagonal + SEARCH_MARGIN_ARCMIN (3, a guess), so stars that move into the picture are found.
+- overlays.fetch_sources takes a replaceable "fetcher", so everything except the online call is tested offline.
+- Verified on 2026-11-15 by a real query: Gaia (astroquery.gaia, cone_search_async) has the columns source_id, ra, dec, pmra, pmdec, phot_g_mean_mag, ref_epoch; AllWISE (IRSA catalogue allwise_p3as_psd) has designation, ra, dec, pmra, pmdec, w1mpro.
+- GIF: one GIF frame per picture of the request (same stretch, match, mode as the PNGs); more than MAX_FRAMES gives HTTP 400 ("try mode=stack"). Pillow may merge identical neighbouring frames. speed_ms outside 20 to 5000 gives 400; non-numbers give 422.
+- CSV: one row per frame, numbered like /api/frames (a stacked request gives stacked rows). Only numbers and ISO dates are written. Floats rounded to 6 decimals; empty cell = unknown.
+- movers.py thresholds (MOVER_MIN_SNR 6, MOVER_NEIGHBOUR_SNR 2, MOVER_MIN_NEIGHBOURS 1, MOVER_MAX_PER_FRAME 10) are guesses; retune on real data (after-data #24).
+- Tests are run with run_all_tests.py (plain Python, no pytest).
+- /api/trail takes no stretch, match or ref settings (they do not change positions). In mode=difference the trail is worked out on the raw frames, like /api/expected-path and /api/export.csv. mode=stack gives the stacked frame numbers.
+- /api/resolve: local names use the 2026.0 position (what the page needs for /api/frames); online names are whatever the service gives (no proper-motion correction, and they are J2000-ish, so a fast mover found online may be off). The label of an online result is the text the visitor typed, so the page must show it as plain text, never as HTML.
+- /api/flags takes no stretch, match or ref (they don’t change flags). In mode=difference it is worked out on the raw frames, like /api/trail. mode=stack gives the stacked frame numbers, with flags OR-ed.
+- The legend follows flags.active_table(): mock bits while USE_MOCK = True, the draft real table afterwards.
+- Real FLAGS: bit n = 1<<n is VERIFIED by the MSKM header cards. Arrays from the files are big-endian; read_cutout converts to native (image/variance float64, flags int32).
+- Real WCS: rotated by about 160 deg, SIP distortion, not mirrored. A real frame keeps its own raw WCS; re-aligning onto one north-up grid is after-data #30. The frame list and PNG promise north up only after that.
+- Observation time of a real frame = IMAGE header DATE-OBS (naive UTC), equal to the SIA t_min. Never the DATE card.
+- Search uses SIA (sia_function and sleep can be replaced by tests). download_cutout only accepts links that start with https://irsa.ipac.caltech.edu/. TimeoutError is the error for "IRSA keeps failing" so main.frames_for can answer 504.
+- wavelength_map is a separate function, not a frame key (the frame format stays the same).
+- get_frames in data_irsa.py stays NotImplementedError until #8 (limit), #10 (parallel and robust downloads) and #30 (re-align) exist: otherwise one request downloads 258 cutouts one by one.
+- wavelength_map uses the WCS "W" with whole pixel arrays and falls back to one pixel at a time (not told apart by the check). It is not a frame key; the frame format is unchanged.
+- The cutouts are read from disk in try_saved_cutouts.py the same way download_cutout reads them (every extension loaded, file closed, HDUList used afterwards). This works.
+- Real images are cut down BEFORE downloading: selection.choose_images or selection.limit_per_detector. The limit keeps images evenly spread over the year.
+- Suggested default for real data: ONE detector at a time (every detector had 36-48 images on 2026-11-15, below MAX_FRAMES = 50). WHICH detector is the default is NOT decided (needs your choice). Not wired into main.py, params.py or the cache key yet.
+- Cleaning masks category "bad" only. KEEP_NAMES in cleaning.py is empty; OUTLIER and TRANSIENT are the two bits that might hit a real mover (UNVERIFIED, check with try_real_batch.py).
+- Frame contract is enforced by contract.py; mock flags are now native int32 like the real ones.
+- Downloads: 4 at the same time (a guess), disk copies keep only the extensions we read. Disk copies never expire (like cache.py).
+- MAX_BAD_FRACTION stays 0.5 until try_real_batch.py has shown the real numbers. From docs/real_files_report.txt alone (six frames, summed counts of the "bad" bits, so an upper bound): D1 about 3.0 %, D2 2.4 %, D3 3.2 %, D4 3.7 %, D5 2.6 %, D6 3.6 % of the pixels. So 0.5 is very loose; a lower limit is probably possible, but six frames from one date are not enough to choose it.
 
 ## Known problems
 
@@ -137,20 +193,20 @@ Todo Backend 28: Skip mostly-bad frames (waiting for go-ahead)
 - Online name lookup depends on CDS, which is currently down
 - config.py is the single place for settings; other files use import config
 - config.py uses DEFAULT_FOV_ARCMIN (arcminutes) from the start; the old degrees version is not carried over
-- MAX_FRAMES = 50 and RELEASE_NAME = "spherex_qr2" are placeholders, not verified values
+- MAX_FRAMES = 50 is a guess. RELEASE_NAME is now “spherex_dr1_qr3”, a cache label.
 - cache.py is not used by anything yet; the Frames endpoint (Backend 9) will call get_or_load. config.py's CACHE_DIR is used by cache.py.
-- Real data returns 501 until data_irsa.py exists (Backend 25).
+- Real data returns 501 until get_frames is written (now only #30 is missing, plus wiring)
 - FOV limits are enforced by params.py (from config.py).
 - A "+" in a URL means a space, so +04d41m36s loses its sign (still positive).
 - Online name lookup (SkyCoord.from_name) is untested against the real service; CDS was down at the last check. names.py cannot tell "unknown name" from "service down", so its message covers both.
-- The name search (names.py, Backend 12) is still not connected to the URL.
+- The name search is served by /api/resolve.
 - With mock data only the WISE 0855 preset (at its year-2026 position) finds frames; the other 4 presets give 404 ("No images cover this sky position") because the mock sky covers only that patch. This is expected until real data (Backend 25).
 - Positions at a given year use straight-line proper motion only (no parallax); fine for centring a cutout.
 - The 504 (slow data) branch is untested against real data; nothing raises TimeoutError yet. Revisit in after-data #10 (Robust downloading).
 - The 500 handler was not triggered in the live test (optional step 5 in the Backend 14 instructions); it is only checked by reading the code.
 - Environment: Python 3.15 could not install PyYAML on Windows (no C++ compiler). The project uses Python 3.13; the venv was rebuilt with `py -3.13 -m venv venv`.
 - A FOV bigger than the image gives a cutout with NaN (black) edges; this is expected. On the mock data (about 10.3 arcmin wide) anything above about 10 arcmin has black edges.
-- MAX_FRAMES (config.py) is still not enforced anywhere. Planned for after-data #8 (Sort, group, limit).
+- selection.py can enforce it before downloading; still not wired into a request.
 - Background matching removes only an offset, not scale differences between frames or bands. Real SPHEREx bands will probably differ in scale. Retune in after-data #16.
 - The mock frames already have almost the same background (noise around 10), so matching changes little on mock data; test_background.py uses frames with big offsets to prove it works.
 - estimate_background ignores flags (real flag bits are not known yet) and the median still includes stars in very crowded fields.
@@ -165,7 +221,7 @@ Todo Backend 28: Skip mostly-bad frames (waiting for go-ahead)
 - Sum and mean give the SAME picture, because the brightness stretch rescales every picture (a sum is just the mean times N). They differ only in the numbers (flux, variance), which matter later for spectra and the hover readout.
 - A sum of a pixel that is NaN in some frames adds fewer frames, so it is a little smaller than its neighbours (only matters at image edges).
 - In stack mode the frame numbers differ from normal mode, so a page must reload the frame list when the mode changes.
-- The trail is not connected to main.py (no endpoint yet). It needs a go-ahead; Todo Backend 22 plans a small endpoint for the expected path.
+- The trail is served by /api/trail.
 - The median method removes very slow movers. A dot that stays near the same pixels in half the frames or more is partly absorbed into the "fixed sky". Real WISE 0855 moves about 8 arcsec/year, which is about one SPHEREx pixel per 9 months, so it may NOT be found this way on real data. Expected-path tracking (Backend 22) or a user-placed starting point may be needed. Revisit in after-data #12 and #22.
 - Same pixel-grid assumption as difference and stack: real pointings need re-aligning first (after-data #11).
 - Flags are not used (real bits unknown). A cosmic ray is only rejected because it is fainter than the dot. Bright fixed-star variability or a brighter artefact can be picked instead of the mover.
@@ -184,20 +240,53 @@ Todo Backend 28: Skip mostly-bad frames (waiting for go-ahead)
 - HIT_RADIUS_ARCSEC = 15 (about 2.4 mock pixels) is a guess; retune when the game page exists. The very fast mover D moves 4.7 pixels per frame, so a click placed on where it was in the previous frame is a miss, as intended.
 - answers.json is read on every request (a tiny file), so there is no stale cache, but it is also not protected: anyone with access to the data/ folder can read the answers. Only static/ is served by the web server.
 - The practice frames themselves are not yet served by the API (see Backend 23 known problem), so the practice game cannot be played in the browser yet.
-- data_irsa.py is a skeleton: real data still gives 501. Unverified: unit/format of the archive's observation time (time_bounds_lower), which header card holds the observation time (the DATE card in the tutorial looks like a processing date), and whether cutout size= is in degrees. Task 26 should settle these.
+- Settled in Backend 26 and after-data #1: t_min is an MJD, DATE-OBS is the observation time, size is in degrees. data_irsa.py now searches, downloads and reads cutouts, but get_frames is not written.
 - IRSA's TAP service failed on 2026-11-15: the synchronous query ran about 400 s and then gave "502 Proxy Error" (twice). The asynchronous TAP route (pyvo run_async) was not tried. Cause unknown (IRSA load or the query itself). Retest later before dropping TAP.
 - Real cutouts are NOT the same size: 59x58, 59x59 and 58x58 pixels for the same 6 arcmin request. Difference, stack, trail and colour picture (which need identical sizes and pixel grids) would give HTTP 400 on real data. Frames must be reprojected onto one grid first (after-data #11).
 - One position gives 258 images over 12 months (6 detectors, different wavelengths), not 12 frames like the mock. MAX_FRAMES = 50 is not enforced yet. A sensible default (for example one detector at a time) is needed (after-data #8).
 - Downloads are slow: 13.5, 18.5 and 26.8 s per cutout, and one needed a retry after an HTTPError. Done serially, 258 cutouts would take well over an hour, so downloads must run in parallel, retry, be cached, and the 5 demo targets should be pre-cached (after-data #10 and #27).
-- The wavelength at the target depends on where it lands on the detector and differs between frames of the same detector (4.9674 vs 5.0034 um for two D6 frames), and 5.0034 is slightly above the nominal band edge of 5.00. A frame's wavelength_um is the value at the cutout centre only.
-- astropy prints a long INFO message about missing "-SIP" in CTYPE for every cutout (the IRSA tutorial says this comes from the spectral WCS). Harmless, but noisy; silence it when the real reader is written.
-- The IRSA tutorial's example header has a rotated pixel grid (PC matrix with off-diagonal terms), so real pictures are probably NOT north-up like the mock. Not checked in our run. The hover and marker maths assume north up (see Decisions); recheck (after-data #11).
-- DETECTOR prints as 3 / 6; whether it is stored as a number or text was not checked: use int().
-- The first picture (cache/test_png/real_first_cutout.png) has not been looked at yet by me: it is not known if WISE 0855 is visible.
+- The wavelength at the target depends on where it lands on the detector and differs between frames of the same detector (4.9674 vs 5.0034 um for two D6 frames), and 5.0034 is slightly above the nominal band edge of 5.00. A frame's wavelength_um is the value at the cutout centre only.Per-pixel values: data_irsa.wavelength_map; the spread across a cutout is 0.012 to 0.045 um, mostly along y.
+- The IRSA tutorial's example header has a rotated pixel grid (PC matrix with off-diagonal terms), so real pictures are probably NOT north-up like the mock. Checked: all six detectors are rotated by about 160 degrees (see DATA_NOTES.md). The hover and marker maths assume north up (see Decisions); recheck (after-data #11).
+- DETECTOR prints as 3 / 6; It is an int in the IMAGE header.
 - cache.py never expires entries, so a cached position keeps its old frames after new weekly data arrives until RELEASE_NAME is changed or python cache.py clear is run. A maximum cache age would need a go-ahead.
-- The SPHEREx-D1..D6 pattern is inferred from the tutorial's 'SPHEREx-D2' (unverified). Cutout size in degrees is from the tutorial (unverified against the cutout service page). It is not known whether the TAP tables include the deep-survey images.
-- TODO after-data #2 and #3 still mention "SIA query (spherex_qr2)"; the plan is now the TAP query in data_irsa.build_search_query.
+- The SPHEREx-D1..D6 pattern is inferred from the tutorial's 'SPHEREx-D2' (Verified: D1 to D6 all occur). Cutout size in degrees is from the tutorial (unverified against the cutout service page). It is not known whether the TAP tables include the deep-survey images.
+- The plan is now SIA with the collections in config.SPHEREX_SIA_COLLECTIONS.
 - IRSA's tutorials show some cutout downloads failing at random (4 of 84 in one run); retries are needed (after-data #10).
+- quality.py and realcheck.py are not connected to main.py (no endpoint, no URL setting). Wiring them needs a go-ahead. If drop_mostly_bad is wired into frames_for, the dropped frames should be reported to the page, and the cache should keep the unfiltered frames.
+- REAL_TABLE_DRAFT categories and MAX_BAD_FRACTION = 0.5, NEAR_RADIUS_PIX = 3, WAVELENGTH_CHANGE_FRACTION = 0.05 are guesses. Retune on real data (after-data #9, #17, #18).
+- Real SPHEREx bit 21 (SOURCE, "mapped to a known source") is treated as info, because it would otherwise be set around every star. Unverified.
+- realcheck compares each frame only with the previous one. With 258 real images from 6 detectors, almost every neighbour pair changes detector or wavelength, so most frames would be yellow. Real use will need a per-detector comparison (after-data #18).
+- Mock-data parts of test_flags.py, test_quality.py and test_realcheck.py have not been run by me; run them and note the result.
+- Epochs in overlays.CATALOGS (Gaia 2016.0, AllWISE about 2010.5) are still not checked against the documentation. The Gaia answer has a ref_epoch column that could be read instead of the fixed 2016.0.
+- AllWISE proper motions look unreliable: the first row of the WISE 0855 field had pmra 2326 and pmdec -1557 mas/yr for a faint source. A wrong proper motion would put its circle in the wrong place (a 2326 mas/yr motion over 15 years is about 35 arcsec, 5 pixels). Consider ignoring WISE proper motion, or only using it when pmcode or the error columns say it is good (check the WISE documentation first, after-data #21).
+- The WISE answer has 777 rows in a 6 arcmin field and Gaia 417, more than MAX_SOURCES = 300; place_sources keeps the brightest. Retune on real data.
+- The Gaia server prints a notice about "two breaking changes" in archive release 3.15. Not a problem so far (the columns we use are fine); recheck if the query breaks.
+- Overlays and spectra are not connected to main.py (no endpoint, no URL setting). Wiring them needs a go-ahead.
+- Spectra do not subtract the sky background, so a reading includes the background around the spot. Real background handling: after-data #19.
+- Spectra mix detectors: different detectors may have different brightness scales, so jumps between bands can come from the instrument (realcheck.py already warns about this).
+- Real frames have different sizes and WCS, so spectrum_at_sky (not spectrum_at_pixel) must be used on real data.
+- The mock data has the same brightness at every wavelength, so mock spectra are flat. A real spectrum will have real shape.
+- The GIF needs at most MAX_FRAMES frames; one real position has 258 images, so a real GIF request needs mode=stack or a frame default (after-data #8).
+- The CSV trail needs at least 3 frames on the same pixel grid (after-data #11); it exports only the single dot found by find_moving_dot or an expected path. User-placed marker positions are not exported yet (needs the marker tool on the page).
+- movers.py does not link spots into tracks, loses very slow movers in the median, may report variable stars, ignores flags, and needs one pixel grid. A real PSF may not satisfy the neighbour rule; retune after-data #24. Not connected to main.py.
+- The offline parts of the three new test files were run with a stub for astropy; the server and mock-data parts have not been run by me; run them and note the result.
+- /api/trail inherits the limits of find_moving_dot: it needs 3 or more frames on one pixel grid (real frames need re-aligning first, after-data #11), a very slow mover is absorbed into the median, and a variable star or artefact can be picked instead of the mover. The server part of test_trail_api.py has not been run by me; run it and note the result.
+- /api/resolve with a name that is not one of the 5 targets calls CDS (SkyCoord.from_name), which was down on 2026-11-15 and has no time limit of its own here; a slow lookup holds one worker thread. A timeout and a request limit are still open (after-data #27). The online path has never been run against the real service. The server part of test_resolve_api.py has not been run by me; run it and note the result.
+- Online names are not on the 5-target list, so with mock data they will give 404 from /api/frames afterwards (no images), which is expected.
+- /api/flags inherits the limits of find_moving_dot and realcheck (one pixel grid, slow movers absorbed by the median, a variable star may be picked as “the dot”). Real flag categories are still guesses (after-data #7, #17, #18). The server part of test_flags_api.py has not been run by me.
+- try_saved_cutouts.py passed everything on the six saved cutouts and one real download. Still UNVERIFIED: search_images against the real service (IRSA 502), whether wavelength_map used the whole-array call or the fallback, and the retry settings (3 tries, 10 s steps, 120 s timeout are guesses; tune in #10). The 502 happened again on the SIA capabilities URL.
+- astropy prints a long INFO message about "-SIP" for each centre_wavelength and wavelength_map call. Confirmed harmless (it comes from the spectral "W" WCS, where sip is set to None). silenced in data_irsa.py (astropy_log.setLevel("WARNING"), for all astropy messages in the program).
+- Raw real frames are rotated by about 160 degrees. The PNG flip, hover, marker and expected-path drawing assume north up, so real frames must be re-aligned first (#30). Whether the angle changes much across the 258 exposures is not checked.
+- Bit 21 SOURCE flags 38-55 % of pixels. With the draft categories about 5 % of pixels are bad or contaminated, so the 3-pixel "near the dot" check in realcheck.py will often be red on real data. Retune in after-data #18 (maybe check only bits like OUTLIER/NONFUNC, and check whether Detect Outliers flags a real mover).
+- the disk copy now drops EPSF and ZODI (the download itself still fetches them).
+- The disk copy without ZODI and EPSF has not been checked on real data: try_real_batch.py compares pixels and centre wavelength of a fresh download with its trimmed disk copy.
+- Parallel downloads (4 workers) are UNVERIFIED against IRSA: the tutorial saw 15 of 84 failures in parallel against 4 of 84 in serial. The number of workers is a guess.
+- OUTLIER (bit 19) and TRANSIENT (bit 0) may flag a real mover and are masked by default cleaning. Unverified.
+- selection, cleaning, downloads and contract are not connected to main.py. data_irsa.get_frames is still NotImplementedError: it still needs #30 (re-align onto one grid), because difference, stack, trail and the GIF need frames on one grid.
+- After-data #2 (search_images) is still not proven on real data (IRSA's SIA search answered 502 on 2026-11-15).
+- Real cutouts of one detector can still differ by a pixel in size; the contract only checks that a frame is self-consistent, not that all frames in a list have the same shape.
+- processing.locate_in_frames uses wcs_world2pix (no SIP) while find_moving_dot uses pixel_to_world_values (with SIP). The gap size is UNVERIFIED; try_real_batch.py prints it. Check in after-data #11 and #12.
+- test_contract, test_cleaning, test_downloads and test_selection run (2026-11-15): cleaning, downloads and selection OK; contract failed as above.
 
 ## How to run and test
 
@@ -228,3 +317,15 @@ Todo Backend 28: Skip mostly-bad frames (waiting for go-ahead)
 - python test_data_irsa.py (skeleton checks, offline)
 - python try_real_query.py (needs internet; about 1-2 minutes; writes docs/real_query_report.txt and cache/test_png/real_first_cutout.png)
 - python test_update_design.py (release label and live query text, offline)
+- python test_flags.py (flag tables; mock-data part needs data/mock/ files) and python flags.py (prints the active table)
+- python test_quality.py (mostly-bad frames; mock-data part needs data/mock/ files)
+- python test_realcheck.py (Is it real? check; mock-data part needs data/mock/ files)
+- python test_spectra.py (spectra; astropy part needs astropy; mock-data part needs data/mock/ files)
+- python test_overlays.py (overlays, offline with a fake catalogue)
+- python overlays.py [gaia|wise] (needs internet; prints the real column names and checks CATALOGS)
+- python run_all_tests.py (all test files; add words to pick some, e.g. python run_all_tests.py cache fov)
+- python test_gif_export.py, python test_export_csv.py, python test_movers.py
+- python test_flags_api.py (route part always, server part needs uvicorn and mock files).
+- python test_contract.py, python test_cleaning.py, python test_selection.py, python test_downloads.py (all offline; run_all_tests.py finds them by itself)
+- python try_real_batch.py [images per detector] [workers] (needs internet; writes docs/real_batch_report.txt)
+- python downloads.py (shows the saved cutouts) / python downloads.py clear

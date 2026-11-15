@@ -1,0 +1,304 @@
+/* SPHEREx Sky Blink: styles for Tasks 1-5.
+   Colours are stored as variables at the top so they are easy to change. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0a0f1c;        /* night sky */
+  --panel: #121a2c;     /* boxes */
+  --line: #26334f;      /* borders */
+  --text: #e6ebf5;
+  --muted: #9aa7c0;
+  --accent: #ffb454;    /* buttons and focus */
+  --accent-text: #1a1204;
+  --error: #ff8a80;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  padding: 1.25rem 1.5rem 0.5rem;
+}
+.site-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+.site-header p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+/* ---------- Layout: picture on the left, controls on the right ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* On phones and narrow windows: stack, picture first */
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
+
+/* ---------- The picture ---------- */
+.stage {
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#sky-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.stage-message {
+  margin: 0;
+  padding: 1rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- Player bar ---------- */
+.player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+.player input[type="range"] {
+  flex: 1 1 140px;
+  accent-color: var(--accent);
+}
+#play-button {
+  min-width: 4.5rem;
+}
+
+.status {
+  min-height: 1.5em;
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+.status.error {
+  color: var(--error);
+}
+
+/* ---------- Control boxes ---------- */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.panel h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+.hint {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- Form elements ---------- */
+label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+input[type="text"],
+select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+}
+button {
+  background: var(--accent);
+  color: var(--accent-text);
+  border: 0;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.4rem;
+}
+.player button {
+  margin-top: 0;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Clear keyboard focus on everything */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Hidden on screen but still read by screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+/* ===== Tasks 6-14 ===== */
+
+/* Task 14: spinner sits on top of the picture while loading */
+.stage { position: relative; }
+.spinner {
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 4px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+.spinner[hidden] { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 3s; }
+}
+
+/* Task 6: counter and loop toggle */
+.counter { min-width: 4.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+.loop-label { display: flex; align-items: center; gap: 0.3rem; }
+
+/* Task 13: wavelength colour strip */
+.wave-strip { display: flex; height: 1.25rem; margin-top: 0.6rem; border-radius: 4px; overflow: hidden; }
+.wave-strip button {
+  flex: 1 1 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  opacity: 0.55;
+}
+.wave-strip button.current { opacity: 1; outline: 2px solid #fff; outline-offset: -2px; }
+.strip-caption { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin: 0.2rem 0 0; }
+
+/* Task 8: preset buttons */
+.preset-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.preset-list button { margin-top: 0; font-size: 0.85rem; padding: 0.4rem 0.7rem; }
+
+/* Task 12: frame info panel */
+.info-list { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.75rem; margin: 0; font-size: 0.9rem; }
+.info-list dt { color: var(--muted); }
+.info-list dd { margin: 0; }
+/* ===== Tasks 16-29 ===== */
+[hidden] { display: none !important; }
+
+/* Tasks 16-17: view panel */
+.segmented { display: flex; gap: 0.3rem; }
+.segmented .mode-btn { flex: 1; margin-top: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+.segmented .mode-btn.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.check { display: flex; align-items: center; gap: 0.4rem; color: var(--text); }
+.check input:disabled + span, .check:has(input:disabled) { color: var(--muted); }
+.row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.row select { flex: 1 1 4rem; }
+
+/* Tasks 21-22: overlay (marker circle, expected path) sits exactly on the picture */
+.overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.stage.can-click { cursor: crosshair; }
+
+/* Task 24: magnifier lens follows the mouse */
+.lens {
+  position: absolute; width: 120px; height: 120px; border-radius: 50%;
+  border: 2px solid var(--accent); background-color: #000; background-repeat: no-repeat;
+  pointer-events: none; box-shadow: 0 0 0 2px #000;
+}
+
+/* Task 23: hover readout */
+.readout { margin: 0.4rem 0 0; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.4em; }
+
+/* Task 28: "Is it real?" badge. Text + colour, so colour-blind users can read it. */
+.badge { display: inline-block; padding: 0 0.5rem; border-radius: 3px; font-size: 0.85rem; font-weight: 600; }
+.badge.ok { background: #2e7d32; color: #fff; }
+.badge.warn { background: #f9a825; color: #1a1204; }
+.badge.bad { background: #c62828; color: #fff; }
+
+/* Task 27: placeholders */
+.placeholder { border: 1px dashed var(--line); border-radius: 4px; padding: 0.6rem; color: var(--muted); font-size: 0.85rem; }
+
+/* Task 20: embed mode (?embed=1) hides the header and the side controls */
+body.embed .site-header, body.embed .controls { display: none; }
+body.embed .layout { grid-template-columns: 1fr; padding: 0.5rem; }
+
+/* Task 29: phones. Bigger tap targets, controls stacked under the picture. */
+@media (max-width: 760px) {
+  .site-header { padding: 1rem 1rem 0; }
+  button, select, input[type="text"] { min-height: 44px; }
+  .wave-strip { height: 1.6rem; }
+  .player { gap: 0.5rem; }
+  .info-list { font-size: 0.95rem; }
+  .lens { display: none; } /* no mouse on a phone */
+}
+/* ===== Tasks 30-32 ===== */
+
+/* Task 30: skip link is off-screen until it gets keyboard focus */
+.skip-link {
+  position: absolute; left: -999px; top: 0; z-index: 10;
+  background: var(--accent); color: var(--accent-text);
+  padding: 0.5rem 1rem; font-weight: 600;
+}
+.skip-link:focus { left: 0; }
+.controls:focus { outline: none; } /* it only receives focus from the skip link */
+
+/* Task 30: colour-blind help. A symbol in front of the badge text, so colour is not the only clue. */
+.badge.ok::before { content: "✓ "; }
+.badge.warn::before { content: "▲ "; }
+.badge.bad::before { content: "✖ "; }
+
+/* Task 30: the "Advanced tools" box */
+.advanced { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 1rem; }
+.advanced > summary, details.panel > summary { cursor: pointer; font-weight: 600; }
+.advanced-body { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.75rem; }
+details.panel { display: block; } /* a <details> panel should not be a flex box */
+
+/* Task 31: tutorial list */
+.tutorial ol { margin: 0.6rem 0 0; padding-left: 1.2rem; font-size: 0.9rem; }
+.tutorial li { margin-bottom: 0.4rem; }
+
+/* Task 32: guided mission box */
+.mission-box { border-top: 1px solid var(--line); margin-top: 0.5rem; padding-top: 0.6rem; }
+.mission-box h3 { margin: 0.2rem 0; font-size: 1rem; }
+.mission-box p { margin: 0.3rem 0; font-size: 0.9rem; }
+.mission-count { color: var(--muted); font-size: 0.8rem; }
+.mission-buttons { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.mission-buttons button { margin-top: 0.4rem; }
