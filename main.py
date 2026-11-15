@@ -3,6 +3,7 @@
 # Then open  http://127.0.0.1:8000/docs  to try the endpoints in your browser.
 #
 # Jobs:
+#   GET /api/flags?...    flag counts and "Is it real?" status per frame (JSON)
 #   GET /api/resolve?name=..                                 a target name -> RA/Dec (JSON)
 #   GET /api/trail?...                                       where the moving dot is in each frame (JSON)
 #   GET /api/limits                                          field-of-view limits (JSON)
@@ -41,11 +42,13 @@ import coords
 import data_mock
 import errors
 import export_csv
+import flags
 import gif_export
 import names
 import params
 import practice_check
 import processing
+import realcheck
 import targets
 
 app = FastAPI(title="SPHEREx Sky Viewer")
@@ -297,6 +300,57 @@ def trail(
         entry["obs_time"] = item["obs_time"].isoformat()
         entries.append(entry)
     return {"mode": p.mode, "frame_count": len(frames), "trail": entries}
+
+@app.get("/api/flags")
+def frame_flags(
+    ra: str = Query(..., description=RA_HELP),
+    dec: str = Query(..., description=DEC_HELP),
+    fov: str | None = Query(None, description=FOV_HELP),
+    mode: str | None = Query(None, description=MODE_HELP),
+    combine: str | None = Query(None, description=COMBINE_HELP),
+    group: str | None = Query(None, description=GROUP_HELP),
+):
+    """Flag info and the "Is it real?" traffic light for every frame.
+
+    Use the same ra, dec, fov, mode, combine and group as /api/frames, so
+    entry number N here belongs to frame number N there.
+    """
+    p = check_request(ra, dec, fov, None, mode, None, None, combine, group)
+    frames = frames_for(p)
+    if p.mode == "stack":
+        frames = stack_for(frames, p)            # same frame numbers as /api/frames
+
+    # Dot positions for realcheck. With fewer than 3 frames (or frames of
+    # different sizes) find_moving_dot refuses, so every position stays None:
+    # the status can then still be yellow (detector/wavelength changed) or grey.
+    positions = [None] * len(frames)
+    if len(frames) >= 3:
+        try:
+            found = processing.find_moving_dot(frames)
+            positions = [item if item["found"] else None for item in found]
+        except ValueError:
+            pass
+    try:
+        checks = realcheck.check_frames(frames, positions)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+    entries = []
+    for i, (frame, check) in enumerate(zip(frames, checks)):
+        summary = flags.frame_summary(frame)     # None if the frame has no flags
+        entries.append({
+            "index": i,
+            "status": check["status"],
+            "reasons": check["reasons"],
+            "detector_changed": check["detector_changed"],
+            "wavelength_changed": check["wavelength_changed"],
+            "flagged_names": check["flagged_names"],
+            "flag_counts": summary["flag_counts"] if summary else None,
+            "bad_fraction": summary["bad_fraction"] if summary else None,
+            "contaminated_fraction": summary["contaminated_fraction"] if summary else None,
+        })
+    return {"mode": p.mode, "frame_count": len(frames), "frames": entries,
+            "legend": flags.legend()}
 
 def grey_pictures(p):
     """ALL frames of one request as grey arrays (same steps as the image endpoint,

@@ -80,10 +80,23 @@ Base: same origin as the page (http://127.0.0.1:8000). Full interactive docs: /d
     Errors: 400 empty or longer than 100 characters, 404 name not found or the online
     service is down (show detail), 422 name missing.
 
+11. GET /api/flags?ra=&dec=&fov=&mode=&combine=&group=
+    Same ra/dec/fov/mode/combine/group as /api/frames, so entry N belongs to frame N.
+    -> {mode, frame_count, frames: [{index, status, reasons, detector_changed,
+    wavelength_changed, flagged_names, flag_counts, bad_fraction,
+    contaminated_fraction}], legend: [{bit, value, name, description, category}]}
+    status is "green", "yellow", "red" or "grey" (grey = could not check).
+    reasons is a list of {code, message}: show message as a tooltip (textContent).
+    flag_counts is {flag name: pixel count}; bad_fraction and
+    contaminated_fraction are 0 to 1. They are null when a frame has no flags.
+    legend explains every flag name (category: bad, contaminated or info).
+    Needs no minimum frame count: with fewer than 3 frames the status comes
+    only from detector/wavelength changes (yellow) or is grey.
+
 ## NOT available yet (do not build against these)
 
 - Colour picture: function exists, no endpoint.
-- Spectrum, flags, "is it real?", overlays: no endpoints.
+- Spectrum, overlays: no endpoints. (flags and “is it real?” now exist).
 - Practice game frames: practice files are not served (only /api/practice/check works).
 - Brightness clip levels (black/white point): no parameter.
 

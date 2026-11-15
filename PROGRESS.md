@@ -51,6 +51,7 @@ Backend after-data, task 1
 - Full test run (2026-11-15): X of Y test files OK. Failures/skips: (list names, or "none").
 - Extra (after Backend 39): GET /api/trail?ra=..&dec=..&fov=..&mode=..&combine=..&group=.. in main.py. Same checks as /api/frames (check_request, frames_for, stack_for), returns processing.find_moving_dot() results, one entry per frame, numbered like /api/frames: index, obs_time (ISO), found, x, y, png_x, png_y, ra_deg, dec_deg, snr. Fewer than 3 frames, or frames of different sizes, give HTTP 400 with the friendly message. test_trail_api.py checks it (route part + server part).
 - Extra: GET /api/resolve?name=.. in main.py. Uses names.resolve_name with year=2026.0 (RESOLVE_YEAR), so local targets match /api/targets?year=2026. Returns ra_deg, dec_deg, label, source ("local" or "online"), target_id (None for online). NameSearchError gives HTTP 404 with its friendly message; an empty name or one longer than 100 characters (NAME_MAX_CHARS) gives HTTP 400; a missing name gives 422. The work is in resolve_name_address(), a plain function, so test_resolve_api.py tests it with fake online lookups and the server part only uses built-in names: no test uses the internet.
+- Extra: GET /api/flags?ra=&dec=&fov=&mode=&combine=&group= in main.py. It uses the same checks and frame numbering as /api/frames. Per frame it returns index, status, reasons, detector_changed, wavelength_changed, flagged_names (from realcheck.check_frames), and flag_counts, bad_fraction, contaminated_fraction (from flags.frame_summary; null if a frame has no flags). It also returns legend (flags.legend()). Dot positions come from processing.find_moving_dot. With fewer than 3 frames, frames of different sizes, or no dot found, positions are None, so the status can still be yellow or grey. test_flags_api.py checks it (route part + server part).
 
 ## In progress
 
@@ -153,6 +154,8 @@ Backend after-data, task 1
 - Tests are run with run_all_tests.py (plain Python, no pytest).
 - /api/trail takes no stretch, match or ref settings (they do not change positions). In mode=difference the trail is worked out on the raw frames, like /api/expected-path and /api/export.csv. mode=stack gives the stacked frame numbers.
 - /api/resolve: local names use the 2026.0 position (what the page needs for /api/frames); online names are whatever the service gives (no proper-motion correction, and they are J2000-ish, so a fast mover found online may be off). The label of an online result is the text the visitor typed, so the page must show it as plain text, never as HTML.
+- /api/flags takes no stretch, match or ref (they don’t change flags). In mode=difference it is worked out on the raw frames, like /api/trail. mode=stack gives the stacked frame numbers, with flags OR-ed.
+- The legend follows flags.active_table(): mock bits while USE_MOCK = True, the draft real table afterwards.
 
 ## Known problems
 
@@ -248,6 +251,7 @@ Backend after-data, task 1
 - /api/trail inherits the limits of find_moving_dot: it needs 3 or more frames on one pixel grid (real frames need re-aligning first, after-data #11), a very slow mover is absorbed into the median, and a variable star or artefact can be picked instead of the mover. The server part of test_trail_api.py has not been run by me; run it and note the result.
 - /api/resolve with a name that is not one of the 5 targets calls CDS (SkyCoord.from_name), which was down on 2026-11-15 and has no time limit of its own here; a slow lookup holds one worker thread. A timeout and a request limit are still open (after-data #27). The online path has never been run against the real service. The server part of test_resolve_api.py has not been run by me; run it and note the result.
 - Online names are not on the 5-target list, so with mock data they will give 404 from /api/frames afterwards (no images), which is expected.
+- /api/flags inherits the limits of find_moving_dot and realcheck (one pixel grid, slow movers absorbed by the median, a variable star may be picked as “the dot”). Real flag categories are still guesses (after-data #7, #17, #18). The server part of test_flags_api.py has not been run by me.
 
 ## How to run and test
 
@@ -286,3 +290,4 @@ Backend after-data, task 1
 - python overlays.py [gaia|wise] (needs internet; prints the real column names and checks CATALOGS)
 - python run_all_tests.py (all test files; add words to pick some, e.g. python run_all_tests.py cache fov)
 - python test_gif_export.py, python test_export_csv.py, python test_movers.py
+- python test_flags_api.py (route part always, server part needs uvicorn and mock files).
