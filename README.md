@@ -46,6 +46,7 @@ On the mock data only the patch around WISE 0855 has images. Use the
 | `GET /api/frames/{index}/image` | One frame as a PNG picture (north up)                                                   |
 | `GET /api/animation.gif`        | All frames as one animated GIF (a download)                                             |
 | `GET /api/export.csv`           | One row per frame with the dot's (or a target's expected) position, as CSV (a download) |
+| `GET /api/trail`                | Where the moving dot is found in each frame (JSON, same numbering as `/api/frames`)     |
 | `GET /api/expected-path`        | Where a preset target should be in each frame (from its proper motion)                  |
 | `GET /api/practice/check`       | Practice game: is a click on a hidden mover?                                            |
 

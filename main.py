@@ -3,6 +3,7 @@
 # Then open  http://127.0.0.1:8000/docs  to try the endpoints in your browser.
 #
 # Jobs:
+#   GET /api/trail?...                                       where the moving dot is in each frame (JSON)
 #   GET /api/limits                                          field-of-view limits (JSON)
 #   GET /api/targets?year=..                                 the 5 preset targets (JSON)
 #   GET /api/frames?ra=..&dec=..&fov=..&mode=..&stretch=..&match=..   list of frames (JSON)
@@ -228,8 +229,7 @@ def frame_image(
         grey = processing.stretch_image(frames[index]["image"], mode=p.stretch, limits=limits)
     return Response(content=processing.image_to_png_bytes(grey), media_type="image/png")
 
-TARGET_HELP = ("Which preset target to follow: its id or name, for example wise0855 or "
-               "'Barnard's Star'. Only the 5 built-in targets work here.")
+TARGET_HELP = "Which preset target to follow: its id or name, for example wise0855."
 
 
 @app.get("/api/expected-path")
@@ -267,9 +267,39 @@ def expected_path(
         "path": path,
     }
 
+@app.get("/api/trail")
+def trail(
+    ra: str = Query(..., description=RA_HELP),
+    dec: str = Query(..., description=DEC_HELP),
+    fov: str | None = Query(None, description=FOV_HELP),
+    mode: str | None = Query(None, description=MODE_HELP),
+    combine: str | None = Query(None, description=COMBINE_HELP),
+    group: str | None = Query(None, description=GROUP_HELP),
+):
+    """Where the moving dot is in each frame (processing.find_moving_dot).
+
+    Use the same ra, dec, fov, mode, combine and group as /api/frames, so
+    entry number N here belongs to frame number N there.
+    """
+    p = check_request(ra, dec, fov, None, mode, None, None, combine, group)
+    frames = frames_for(p)
+    if p.mode == "stack":
+        frames = stack_for(frames, p)            # same frame numbers as /api/frames
+    try:
+        found = processing.find_moving_dot(frames)
+    except ValueError as err:                    # fewer than 3 frames, or frames of different sizes
+        raise HTTPException(status_code=400, detail=str(err))
+    keys = ("index", "found", "x", "y", "png_x", "png_y", "ra_deg", "dec_deg", "snr")
+    entries = []
+    for item in found:
+        entry = {k: item[k] for k in keys}
+        entry["obs_time"] = item["obs_time"].isoformat()
+        entries.append(entry)
+    return {"mode": p.mode, "frame_count": len(frames), "trail": entries}
+
 def grey_pictures(p):
-    """Backend 34: ALL frames of one request as grey arrays (the same steps as the
-    image endpoint above, so a GIF frame looks exactly like the PNG of that frame)."""
+    """ALL frames of one request as grey arrays (same steps as the image endpoint,
+    so a GIF frame looks exactly like the PNG of that frame)."""
     frames = frames_for(p)
     if p.match:
         frames = processing.match_backgrounds(frames)
@@ -305,7 +335,7 @@ def animation_gif(
     group: str | None = Query(None, description=GROUP_HELP),
     speed_ms: int = Query(gif_export.DEFAULT_DURATION_MS, description=SPEED_HELP),
 ):
-    """Backend 34: every frame of the request as one animated GIF that loops forever."""
+    """Every frame of the request as one animated GIF that loops forever."""
     p = check_request(ra, dec, fov, stretch, mode, match, ref, combine, group)
     try:
         gif_export.check_duration(speed_ms)
@@ -328,7 +358,7 @@ def export_csv_file(
     kind: str = Query("trail", description=KIND_HELP),
     target: str | None = Query(None, description=TARGET_HELP + " Only for kind=expected."),
 ):
-    """Backend 35: one row per frame (same numbering as /api/frames) as a CSV file."""
+    """One row per frame (same numbering as /api/frames) as a CSV file."""
     p = check_request(ra, dec, fov, None, mode, None, None, combine, group)
     kind = kind.strip().lower()
     if kind not in export_csv.KINDS:
@@ -358,7 +388,6 @@ def export_csv_file(
     name = f"spherex_{kind}_{p.ra:.4f}_{p.dec:+.4f}.csv"
     return Response(content=text, media_type="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
-
 
 @app.get("/api/targets")
 def list_targets(year: str | None = Query(None, description=YEAR_HELP)):

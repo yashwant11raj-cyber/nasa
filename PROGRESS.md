@@ -49,6 +49,7 @@ Backend after-data, task 1
 - Todo Backend 38: README.md written (setup, run, endpoints, URL settings, data release, tests). requirements.txt unchanged (no new library).
 - Todo Backend 39: docs/FUTURE_WORK.md written.
 - Full test run (2026-11-15): X of Y test files OK. Failures/skips: (list names, or "none").
+- Extra (after Backend 39): GET /api/trail?ra=..&dec=..&fov=..&mode=..&combine=..&group=.. in main.py. Same checks as /api/frames (check_request, frames_for, stack_for), returns processing.find_moving_dot() results, one entry per frame, numbered like /api/frames: index, obs_time (ISO), found, x, y, png_x, png_y, ra_deg, dec_deg, snr. Fewer than 3 frames, or frames of different sizes, give HTTP 400 with the friendly message. test_trail_api.py checks it (route part + server part).
 
 ## In progress
 
@@ -149,6 +150,7 @@ Backend after-data, task 1
 - CSV: one row per frame, numbered like /api/frames (a stacked request gives stacked rows). Only numbers and ISO dates are written. Floats rounded to 6 decimals; empty cell = unknown.
 - movers.py thresholds (MOVER_MIN_SNR 6, MOVER_NEIGHBOUR_SNR 2, MOVER_MIN_NEIGHBOURS 1, MOVER_MAX_PER_FRAME 10) are guesses; retune on real data (after-data #24).
 - Tests are run with run_all_tests.py (plain Python, no pytest).
+- /api/trail takes no stretch, match or ref settings (they do not change positions). In mode=difference the trail is worked out on the raw frames, like /api/expected-path and /api/export.csv. mode=stack gives the stacked frame numbers.
 
 ## Known problems
 
@@ -191,7 +193,7 @@ Backend after-data, task 1
 - Sum and mean give the SAME picture, because the brightness stretch rescales every picture (a sum is just the mean times N). They differ only in the numbers (flux, variance), which matter later for spectra and the hover readout.
 - A sum of a pixel that is NaN in some frames adds fewer frames, so it is a little smaller than its neighbours (only matters at image edges).
 - In stack mode the frame numbers differ from normal mode, so a page must reload the frame list when the mode changes.
-- The trail is not connected to main.py (no endpoint yet). It needs a go-ahead; Todo Backend 22 plans a small endpoint for the expected path.
+- The trail is served by /api/trail.
 - The median method removes very slow movers. A dot that stays near the same pixels in half the frames or more is partly absorbed into the "fixed sky". Real WISE 0855 moves about 8 arcsec/year, which is about one SPHEREx pixel per 9 months, so it may NOT be found this way on real data. Expected-path tracking (Backend 22) or a user-placed starting point may be needed. Revisit in after-data #12 and #22.
 - Same pixel-grid assumption as difference and stack: real pointings need re-aligning first (after-data #11).
 - Flags are not used (real bits unknown). A cosmic ray is only rejected because it is fainter than the dot. Bright fixed-star variability or a brighter artefact can be picked instead of the mover.
@@ -241,6 +243,7 @@ Backend after-data, task 1
 - The CSV trail needs at least 3 frames on the same pixel grid (after-data #11); it exports only the single dot found by find_moving_dot or an expected path. User-placed marker positions are not exported yet (needs the marker tool on the page).
 - movers.py does not link spots into tracks, loses very slow movers in the median, may report variable stars, ignores flags, and needs one pixel grid. A real PSF may not satisfy the neighbour rule; retune after-data #24. Not connected to main.py.
 - The offline parts of the three new test files were run with a stub for astropy; the server and mock-data parts have not been run by me; run them and note the result.
+- /api/trail inherits the limits of find_moving_dot: it needs 3 or more frames on one pixel grid (real frames need re-aligning first, after-data #11), a very slow mover is absorbed into the median, and a variable star or artefact can be picked instead of the mover. The server part of test_trail_api.py has not been run by me; run it and note the result.
 
 ## How to run and test
 

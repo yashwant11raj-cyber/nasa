@@ -61,11 +61,19 @@ Base: same origin as the page (http://127.0.0.1:8000). Full interactive docs: /d
    Columns: kind, frame, obs_time, detector, wavelength_um, n_stacked, x, y,
    ra_deg, dec_deg, ok, snr. Empty cell = unknown.
 
+9. GET /api/trail?ra=&dec=&fov=&mode=&combine=&group=
+   Same ra/dec/fov/mode/combine/group as /api/frames, so entry N belongs to frame N.
+   -> {mode, frame_count, trail: [{index, obs_time, found, x, y, png_x, png_y,
+   ra_deg, dec_deg, snr}]}
+   found=false means no dot was found in that frame: x, y, png_x, png_y, ra_deg
+   and dec_deg are then null (skip it when drawing). png_x/png_y are in PNG pixels
+   from the top-left, like /api/expected-path. Needs at least 3 frames, otherwise 400.
+   In mode=difference the trail is worked out on the raw frames.
+
 ## NOT available yet (do not build against these)
 
 - Name search (names.py has no URL). Name box only works for the 5 presets.
-- Motion trail and colour picture: functions exist, no endpoint.
-  (/api/export.csv?kind=trail gives the same positions as a file only.)
+- Colour picture: function exists, no endpoint.
 - Spectrum, flags, "is it real?", overlays: no endpoints.
 - Practice game frames: practice files are not served (only /api/practice/check works).
 - Brightness clip levels (black/white point): no parameter.
