@@ -177,55 +177,54 @@ This file replaces Todo_List.pdf. Nothing is ticked.
    Pull IMAGE, FLAGS, VARIANCE, WCS, DETECTOR and DATE into the frame format.
 5. [✔] Wavelength map (Part A)
    Read the WCS-WAVE extension to get the wavelength at each pixel.
-6. [ ] Contract test (Part G)
-       Check that real frames and mock frames have identical keys and types.
-7. [ ] Cleaning (Part A)
-       Handle NaN pixels and mask bad flags using the bit table in the Explanatory Supplement.
-8. [ ] Sort, group, limit (Part A)
-       Order frames by date, group by detector, and cap the number of frames per request.
+6. [✔] Contract test (Part G)
+   Check that real frames and mock frames have identical keys and types.
+7. [✔] Cleaning (Part A)
+   Handle NaN pixels and mask bad flags using the bit table in the Explanatory Supplement.
+8. [✔] Sort, group, limit (Part A)
+   Order frames by date, group by detector, and cap the number of frames per request.
 9. [ ] Skip mostly-bad frames on real flags (new) (Part A)
-       Re-tune the "too many bad pixels" limit using the real flag bits.
-10. [ ] Robust downloading (Part A)
-        Add longer timeouts, retries, caching of real cutouts and "no images" handling.
-11. [ ] Edge cases (Part A, B)
+       Re-tune the "too many bad pixels" limit using the real flag bits. 10.[✔] Robust downloading (Part A)
+       Add longer timeouts, retries, caching of real cutouts and "no images" handling.
+10. [ ] Edge cases (Part A, B)
         Handle targets near image edges, partial cutouts and different pointings.
-12. [ ] WISE 0855 first (Part E)
+11. [ ] WISE 0855 first (Part E)
         Test it end to end, then check the motion direction against its proper motion.
-13. [ ] All 5 targets (#6) (Part E)
+12. [ ] All 5 targets (#6) (Part E)
         Verify each one returns frames. Fix coordinates in targets.py if needed.
-14. [ ] Name search check (new) (Part E)
+13. [ ] Name search check (new) (Part E)
         Confirm all 5 names resolve (locally and through the online lookup) and note whether the CDS service is back.
-15. [ ] Retune processing (Part B)
+14. [ ] Retune processing (Part B)
         Adjust stretch defaults for real units (MJy/sr). Tune difference and stack on real noise.
-16. [ ] Retune background matching and asinh (new) (Part B)
+15. [ ] Retune background matching and asinh (new) (Part B)
         Check both on real frames and adjust the defaults.
-17. [ ] Real flags (#16) (Part F)
+16. [ ] Real flags (#16) (Part F)
         Decode FLAGS with the correct bit meanings and return per-frame contamination info.
-18. [ ] Real "Is it real?" check (new) (Part F)
+17. [ ] Real "Is it real?" check (new) (Part F)
         Use real detector, wavelength and flag information, and tune the warning thresholds.
-19. [ ] Real spectra (#15) (Part F)
+18. [ ] Real spectra (#15) (Part F)
         Build the spectrum from the real wavelength map and fluxes (ask before installing SPXQuery).
-20. [ ] Real spectrum comparison (new) (Part F)
+19. [ ] Real spectrum comparison (new) (Part F)
         Compare WISE 0855 with a nearby fixed star on real data.
-21. [ ] Real overlays (#17) (Part F)
+20. [ ] Real overlays (#17) (Part F)
         Fetch Gaia/WISE sources and account for proper motion between epochs.
-22. [ ] Expected-path check (new) (Part E)
+21. [ ] Expected-path check (new) (Part E)
         Compare the predicted path with the real dot for WISE 0855 and Barnard's Star. Fix any offset.
-23. [ ] Real colour picture (new) (Part B)
+22. [ ] Real colour picture (new) (Part B)
         Choose which 3 bands to use as red, green and blue. Keep detector differences in mind.
-24. [ ] Auto-find test, optional (new) (Part B)
+23. [ ] Auto-find test, optional (new) (Part B)
         Try the mover finder on real frames. Keep it only if it works.
-25. [ ] Export CSV check (new) (Part C)
+24. [ ] Export CSV check (new) (Part C)
         Confirm exported positions and dates match the real frames.
-26. [ ] Update path (added) (Part A)
+25. [ ] Update path (added) (Part A)
         Make switching to a newer release a one-line config change, and test it.
-27. [ ] Performance (Part A, C)
+26. [ ] Performance (Part A, C)
         Measure load time per FOV, limit large requests, and pre-cache the 5 targets for demos.
-28. [ ] Public hosting plan (Part G)
+27. [ ] Public hosting plan (Part G)
         Pick a host, set limits to protect the server, and test from another device.
-29. [ ] Update docs and commit (Part G)
+28. [ ] Update docs and commit (Part G)
         Record what works in PROGRESS.md and DATA_NOTES.md. Update the README.
-30. [ ] Re-align frames and default frame limit (new): resample all cutouts onto one pixel grid, then apply a default limit (for example one detector). Needed before difference, stack, trail, colour, movers and GIF work on real data.
+29. [ ] Re-align frames and default frame limit (new): resample all cutouts onto one pixel grid, then apply a default limit (for example one detector). Needed before difference, stack, trail, colour, movers and GIF work on real data.
 
 ---
 

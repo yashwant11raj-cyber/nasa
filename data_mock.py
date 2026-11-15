@@ -193,7 +193,7 @@ def load_mock_frame(path):
             "obs_time": datetime.fromisoformat(hdr["DATE-OBS"]),
             "wavelength_um": float(hdr["WAVE_UM"]),
             "detector": int(hdr["DETECTOR"]),
-            "flags": np.array(hdul["FLAGS"].data),
+            "flags": np.asarray(hdul["FLAGS"].data).astype(np.int32),   # FITS gives big-endian; make it native int32
             "variance": np.array(hdul["VARIANCE"].data, dtype=float),
             "source_file": path.name,
         }

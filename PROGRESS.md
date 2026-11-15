@@ -55,6 +55,12 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 - After-data #3, #4, #5 (checked on real data, 2026-11-15, try_saved_cutouts.py): download_cutout downloaded the known D3 link in 17.8 s on the first try, and its FLAGS equal the saved D3 file. read_cutout turned all six saved cutouts (one per detector) into frames: exact FRAME_KEYS, detector int, report shapes, float64/int32/float64 native arrays, naive 2025 obs_time from DATE-OBS, centre wavelength equal to the report to 4 decimals. wavelength_map gave a finite per-pixel map of the right shape for all six (corner pixel (x=0, y=0) equals the report; ranges inside the band edges). A real frame with a SIP WCS survives pickle (cache.py). data_irsa.py also has centre_wavelength and mjd_to_datetime. test_data_irsa.py (offline, fakes) was rewritten.
 - After-data #1 (inspect real files): done from docs/real_files_report.txt (inspect_real_files.py, all six detectors). Results are in docs/DATA_NOTES.md (section "After-data #1"). FRAME_FORMAT.md got an "Extra rules found in the real files" section. flags.py: comment fixed (bit n = 1<<n is now verified).
 - After-data #2 (search_images, written, NOT proven on real data): IRSA's SIA service answered 502 Proxy Error on its capabilities endpoint (2026-11-15, same day as the TAP 502). The planned error path worked: 3 tries, then TimeoutError. try_real_frames.py will prove the search and the full chain once IRSA answers.
+- After-data #6: first run of test_contract.py 2026-11-15, everything passed except the mock-versus-real type check (mock flags were '>i4'). Fixed in data_mock.py; rerun to confirm.
+- After-data #7 (cleaning, offline tests pass): cleaning.py has mask_value, flagged_pixels, clean_frame, clean_frames, masked_share. clean_frame returns a NEW frame with NaN in the image and variance where a "bad" flag is set, where the image is not finite, or where the variance is negative or not finite. Contaminated and info flags are not masked by default. test_cleaning.py checks it. Not connected to main.py (data_irsa.get_frames will use it).
+- After-data #8 (sort, group, limit, offline tests pass): selection.py has sort_images, group_by_detector, count_by_detector, spread_pick, choose_images(images, max_frames, detector) -> (chosen, available) and limit_per_detector(images, n). The limit keeps images evenly spread over time (first and last included). test_selection.py uses the real counts (36, 48, 45, 36, 48, 45). Not connected to main.py.
+- After-data #10 (robust downloading, offline tests pass, real run waiting): downloads.py has download_many (parallel, default 4 workers, one failure never stops the others, disk copies in cache/cutout_files/ with only PRIMARY, IMAGE, FLAGS, VARIANCE and WCS-WAVE kept), summarize, require_some (raises TimeoutError when nothing at all arrived, so main.frames_for gives HTTP 504), clear_files. data_irsa.py now hides astropy's INFO note about "-SIP" (astropy_log.setLevel("WARNING")). test_downloads.py checks it (the disk part needs astropy). "No images" is handled by search_images -> [] -> choose_images -> ([], 0) -> HTTP 404.
+- After-data #9 (skip mostly-bad frames on real flags): NOT done. try_real_batch.py is written (it also runs #6, #7, #8, #10 on real data and prints the bad fraction of every frame with three flag-table variants). Waiting for its output.
+- data_mock.py: load_mock_frame converts flags to native int32 (the first contract run showed mock '>i4' against real 'int32'). data_irsa.py: astropy_log.setLevel("WARNING"). Run python cache.py clear.
 
 ## In progress
 
@@ -62,7 +68,7 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 
 ## Next step
 
-- Re-run python try_real_frames.py when IRSA's SIA search answers again (proves #2 and the whole search -> download -> read chain), then tick #2. After that: #6 contract test, #7 cleaning, #8 sort/group/limit, #9 skip mostly-bad frames, #10 robust downloading. Re-aligning frames onto one north-up grid (#30) is needed before real pictures are shown.
+- Run python test_contract.py after the fix, then python try_real_batch.py and paste the output.
 
 ## Decisions made
 
@@ -167,6 +173,12 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 - get_frames in data_irsa.py stays NotImplementedError until #8 (limit), #10 (parallel and robust downloads) and #30 (re-align) exist: otherwise one request downloads 258 cutouts one by one.
 - wavelength_map uses the WCS "W" with whole pixel arrays and falls back to one pixel at a time (not told apart by the check). It is not a frame key; the frame format is unchanged.
 - The cutouts are read from disk in try_saved_cutouts.py the same way download_cutout reads them (every extension loaded, file closed, HDUList used afterwards). This works.
+- Real images are cut down BEFORE downloading: selection.choose_images or selection.limit_per_detector. The limit keeps images evenly spread over the year.
+- Suggested default for real data: ONE detector at a time (every detector had 36-48 images on 2026-11-15, below MAX_FRAMES = 50). WHICH detector is the default is NOT decided (needs your choice). Not wired into main.py, params.py or the cache key yet.
+- Cleaning masks category "bad" only. KEEP_NAMES in cleaning.py is empty; OUTLIER and TRANSIENT are the two bits that might hit a real mover (UNVERIFIED, check with try_real_batch.py).
+- Frame contract is enforced by contract.py; mock flags are now native int32 like the real ones.
+- Downloads: 4 at the same time (a guess), disk copies keep only the extensions we read. Disk copies never expire (like cache.py).
+- MAX_BAD_FRACTION stays 0.5 until try_real_batch.py has shown the real numbers. From docs/real_files_report.txt alone (six frames, summed counts of the "bad" bits, so an upper bound): D1 about 3.0 %, D2 2.4 %, D3 3.2 %, D4 3.7 %, D5 2.6 %, D6 3.6 % of the pixels. So 0.5 is very loose; a lower limit is probably possible, but six frames from one date are not enough to choose it.
 
 ## Known problems
 
@@ -183,7 +195,7 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 - config.py uses DEFAULT_FOV_ARCMIN (arcminutes) from the start; the old degrees version is not carried over
 - MAX_FRAMES = 50 is a guess. RELEASE_NAME is now “spherex_dr1_qr3”, a cache label.
 - cache.py is not used by anything yet; the Frames endpoint (Backend 9) will call get_or_load. config.py's CACHE_DIR is used by cache.py.
-- Real data returns 501 until get_frames is written (needs #8, #10, #30)
+- Real data returns 501 until get_frames is written (now only #30 is missing, plus wiring)
 - FOV limits are enforced by params.py (from config.py).
 - A "+" in a URL means a space, so +04d41m36s loses its sign (still positive).
 - Online name lookup (SkyCoord.from_name) is untested against the real service; CDS was down at the last check. names.py cannot tell "unknown name" from "service down", so its message covers both.
@@ -194,7 +206,7 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 - The 500 handler was not triggered in the live test (optional step 5 in the Backend 14 instructions); it is only checked by reading the code.
 - Environment: Python 3.15 could not install PyYAML on Windows (no C++ compiler). The project uses Python 3.13; the venv was rebuilt with `py -3.13 -m venv venv`.
 - A FOV bigger than the image gives a cutout with NaN (black) edges; this is expected. On the mock data (about 10.3 arcmin wide) anything above about 10 arcmin has black edges.
-- MAX_FRAMES is only enforced by the GIF. Planned for after-data #8 (Sort, group, limit).
+- selection.py can enforce it before downloading; still not wired into a request.
 - Background matching removes only an offset, not scale differences between frames or bands. Real SPHEREx bands will probably differ in scale. Retune in after-data #16.
 - The mock frames already have almost the same background (noise around 10), so matching changes little on mock data; test_background.py uses frames with big offsets to prove it works.
 - estimate_background ignores flags (real flag bits are not known yet) and the median still includes stars in very crowded fields.
@@ -263,10 +275,18 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 - Online names are not on the 5-target list, so with mock data they will give 404 from /api/frames afterwards (no images), which is expected.
 - /api/flags inherits the limits of find_moving_dot and realcheck (one pixel grid, slow movers absorbed by the median, a variable star may be picked as “the dot”). Real flag categories are still guesses (after-data #7, #17, #18). The server part of test_flags_api.py has not been run by me.
 - try_saved_cutouts.py passed everything on the six saved cutouts and one real download. Still UNVERIFIED: search_images against the real service (IRSA 502), whether wavelength_map used the whole-array call or the fallback, and the retry settings (3 tries, 10 s steps, 120 s timeout are guesses; tune in #10). The 502 happened again on the SIA capabilities URL.
-- astropy prints a long INFO message about "-SIP" for each centre_wavelength and wavelength_map call. Confirmed harmless (it comes from the spectral "W" WCS, where sip is set to None). Not silenced yet; do it in a later task (for example #10) with a small edit of \_spectral_wcs.
+- astropy prints a long INFO message about "-SIP" for each centre_wavelength and wavelength_map call. Confirmed harmless (it comes from the spectral "W" WCS, where sip is set to None). silenced in data_irsa.py (astropy_log.setLevel("WARNING"), for all astropy messages in the program).
 - Raw real frames are rotated by about 160 degrees. The PNG flip, hover, marker and expected-path drawing assume north up, so real frames must be re-aligned first (#30). Whether the angle changes much across the 258 exposures is not checked.
 - Bit 21 SOURCE flags 38-55 % of pixels. With the draft categories about 5 % of pixels are bad or contaminated, so the 3-pixel "near the dot" check in realcheck.py will often be red on real data. Retune in after-data #18 (maybe check only bits like OUTLIER/NONFUNC, and check whether Detect Outliers flags a real mover).
-- Each real download also carries the EPSF table (about 4 MB) that we do not use.
+- the disk copy now drops EPSF and ZODI (the download itself still fetches them).
+- The disk copy without ZODI and EPSF has not been checked on real data: try_real_batch.py compares pixels and centre wavelength of a fresh download with its trimmed disk copy.
+- Parallel downloads (4 workers) are UNVERIFIED against IRSA: the tutorial saw 15 of 84 failures in parallel against 4 of 84 in serial. The number of workers is a guess.
+- OUTLIER (bit 19) and TRANSIENT (bit 0) may flag a real mover and are masked by default cleaning. Unverified.
+- selection, cleaning, downloads and contract are not connected to main.py. data_irsa.get_frames is still NotImplementedError: it still needs #30 (re-align onto one grid), because difference, stack, trail and the GIF need frames on one grid.
+- After-data #2 (search_images) is still not proven on real data (IRSA's SIA search answered 502 on 2026-11-15).
+- Real cutouts of one detector can still differ by a pixel in size; the contract only checks that a frame is self-consistent, not that all frames in a list have the same shape.
+- processing.locate_in_frames uses wcs_world2pix (no SIP) while find_moving_dot uses pixel_to_world_values (with SIP). The gap size is UNVERIFIED; try_real_batch.py prints it. Check in after-data #11 and #12.
+- test_contract, test_cleaning, test_downloads and test_selection run (2026-11-15): cleaning, downloads and selection OK; contract failed as above.
 
 ## How to run and test
 
@@ -306,3 +326,6 @@ Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA s
 - python run_all_tests.py (all test files; add words to pick some, e.g. python run_all_tests.py cache fov)
 - python test_gif_export.py, python test_export_csv.py, python test_movers.py
 - python test_flags_api.py (route part always, server part needs uvicorn and mock files).
+- python test_contract.py, python test_cleaning.py, python test_selection.py, python test_downloads.py (all offline; run_all_tests.py finds them by itself)
+- python try_real_batch.py [images per detector] [workers] (needs internet; writes docs/real_batch_report.txt)
+- python downloads.py (shows the saved cutouts) / python downloads.py clear

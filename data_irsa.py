@@ -29,8 +29,11 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy import log as astropy_log
 
 import config
+
+astropy_log.setLevel("WARNING")   # hides the harmless "-SIP" INFO message (and all other astropy INFO messages)
 
 # Start of every cutout link. Verified: the SIA access_url starts with this.
 IRSA_BASE_URL = "https://irsa.ipac.caltech.edu/"

@@ -117,6 +117,10 @@ parts run too; without it they print SKIPPED. Run a few files only with
 | `flags.py`, `quality.py`, `realcheck.py`,         | Used by main.py (/api/flags)                                              |
 | `spectra.py`, `overlays.py`, `movers.py`          | Extras (not connected to `main.py` yet)                                   |
 | `targets.py`                                      | The 5 test targets                                                        |
+| `contract.py`                                     | Checks that a frame follows FRAME_FORMAT.md (mock or real)                |
+| `cleaning.py`                                     | Turns flagged / unusable pixels into NaN (new frames)                     |
+| `selection.py`                                    | Sorts, groups and limits the real image list before download              |
+| `downloads.py`                                    | Parallel cutout downloads with disk copies (cache/cutout_files/)          |
 
 Notes for helpers: `PROGRESS.md` (what is done and what is known to be wrong),
 `FRAME_FORMAT.md` (the frame dictionary), `docs/DATA_NOTES.md` (real data findings),

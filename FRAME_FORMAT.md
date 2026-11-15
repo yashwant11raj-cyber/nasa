@@ -30,3 +30,7 @@ get_frames(ra_deg, dec_deg, fov_arcmin) -> list of frames sorted by obs_time
   north-up grid first (TODO after-data #30).
 - Real cutouts of one request differ by a pixel in size (58 or 59 pixels).
 - The frame list may be longer than the mock's 12 frames (258 for one position).
+- contract.py checks these rules in code (python test_contract.py).
+- Mock frames follow the same contract: data_mock.load_mock_frame converts flags to native
+  int32 (FITS files give big-endian). Mock and real frames have identical keys and types
+  (checked by test_contract.py).
