@@ -57,6 +57,7 @@ const expectedToggle = document.getElementById("expected-toggle");
 const magnifierToggle = document.getElementById("magnifier-toggle");
 const clearMarkerButton = document.getElementById("clear-marker");
 const csvButton = document.getElementById("csv-button");
+const gifButton = document.getElementById("gif-button");
 
 const info = {
   date: document.getElementById("info-date"),
@@ -87,7 +88,8 @@ let showExpected = false;
 let expectedPath = []; // from /api/expected-path, same numbering as frames
 
 // Task 20: ?embed=1 hides the header and the controls
-const isEmbed = new URLSearchParams(window.location.search).get("embed") === "1";
+const isEmbed =
+  new URLSearchParams(window.location.search).get("embed") === "1";
 if (isEmbed) document.body.classList.add("embed");
 
 // ---------------------------------------------------------------
@@ -105,7 +107,7 @@ async function fetchJson(url) {
     response = await fetch(url);
   } catch (networkError) {
     throw new Error(
-      "Could not reach the server. Check that it is running (uvicorn main:app --reload)."
+      "Could not reach the server. Check that it is running (uvicorn main:app --reload).",
     );
   }
   let data = null;
@@ -116,7 +118,9 @@ async function fetchJson(url) {
   }
   if (!response.ok) {
     throw new Error(
-      data && data.detail ? data.detail : "Something went wrong (code " + response.status + ")."
+      data && data.detail
+        ? data.detail
+        : "Something went wrong (code " + response.status + ").",
     );
   }
   return data;
@@ -124,7 +128,9 @@ async function fetchJson(url) {
 
 // "Barnard's Star" and "barnards star" both become "barnardsstar".
 function simplifyName(text) {
-  return String(text).toLowerCase().replace(/[\s'’`\-_]/g, "");
+  return String(text)
+    .toLowerCase()
+    .replace(/[\s'’`\-_]/g, "");
 }
 
 // ---------------------------------------------------------------
@@ -154,7 +160,10 @@ function skyToFraction(frame, ra, dec) {
   if (dra < -180) dra += 360;
   const dxPix = -(dra * cosDec) / scale;
   const dyPix = -(dec - frame.center_dec_deg) / scale;
-  return { fx: 0.5 + dxPix / frame.width_px, fy: 0.5 + dyPix / frame.height_px };
+  return {
+    fx: 0.5 + dxPix / frame.width_px,
+    fy: 0.5 + dyPix / frame.height_px,
+  };
 }
 
 // Where is the mouse inside the picture? Returns null if outside it.
@@ -191,16 +200,27 @@ function drawOverlay() {
   // Task 22: expected path = dashed line through all dates, ring on the current one
   if (showExpected && expectedPath.length === frames.length) {
     const points = expectedPath.map((p) => p.png_x + "," + p.png_y).join(" ");
-    overlay.appendChild(svgEl("polyline", {
-      points: points, fill: "none", stroke: "#4dd0e1",
-      "stroke-width": line, "stroke-dasharray": line * 3 + " " + line * 3,
-    }));
+    overlay.appendChild(
+      svgEl("polyline", {
+        points: points,
+        fill: "none",
+        stroke: "#4dd0e1",
+        "stroke-width": line,
+        "stroke-dasharray": line * 3 + " " + line * 3,
+      }),
+    );
     const here = expectedPath[currentIndex];
     if (here && here.inside) {
-      overlay.appendChild(svgEl("circle", {
-        cx: here.png_x, cy: here.png_y, r: radius * 0.6,
-        fill: "none", stroke: "#4dd0e1", "stroke-width": line * 1.5,
-      }));
+      overlay.appendChild(
+        svgEl("circle", {
+          cx: here.png_x,
+          cy: here.png_y,
+          r: radius * 0.6,
+          fill: "none",
+          stroke: "#4dd0e1",
+          "stroke-width": line * 1.5,
+        }),
+      );
     }
   }
 
@@ -208,10 +228,16 @@ function drawOverlay() {
   if (marker) {
     const f = skyToFraction(frames[currentIndex], marker.ra, marker.dec);
     if (f.fx >= 0 && f.fx <= 1 && f.fy >= 0 && f.fy <= 1) {
-      overlay.appendChild(svgEl("circle", {
-        cx: f.fx * w, cy: f.fy * h, r: radius,
-        fill: "none", stroke: "#ffb454", "stroke-width": line * 1.5,
-      }));
+      overlay.appendChild(
+        svgEl("circle", {
+          cx: f.fx * w,
+          cy: f.fy * h,
+          r: radius,
+          fill: "none",
+          stroke: "#ffb454",
+          "stroke-width": line * 1.5,
+        }),
+      );
     }
   }
 }
@@ -226,14 +252,21 @@ async function loadExpected() {
   if (!currentTargetId) {
     showExpected = false;
     expectedToggle.checked = false;
-    setStatus("The expected path only works for the preset targets. Click a preset first.", true);
+    setStatus(
+      "The expected path only works for the preset targets. Click a preset first.",
+      true,
+    );
     drawOverlay();
     return;
   }
   const thisRequest = latestRequest;
   // Same ra/dec/fov/mode/group as /api/frames, so entry N belongs to frame N.
   const base = currentParams(lastRa, lastDec);
-  const query = new URLSearchParams({ target: currentTargetId, ra: lastRa, dec: lastDec });
+  const query = new URLSearchParams({
+    target: currentTargetId,
+    ra: lastRa,
+    dec: lastDec,
+  });
   ["fov", "mode", "group"].forEach((key) => {
     if (base.has(key)) query.set(key, base.get(key));
   });
@@ -259,7 +292,13 @@ stage.addEventListener("click", (event) => {
   if (!p) return;
   marker = fractionToSky(frames[currentIndex], p.fx, p.fy);
   drawOverlay();
-  setStatus("Marker at RA " + marker.ra.toFixed(4) + "°, Dec " + marker.dec.toFixed(4) + "°.");
+  setStatus(
+    "Marker at RA " +
+      marker.ra.toFixed(4) +
+      "°, Dec " +
+      marker.dec.toFixed(4) +
+      "°.",
+  );
 });
 
 clearMarkerButton.addEventListener("click", () => {
@@ -283,7 +322,11 @@ stage.addEventListener("mousemove", (event) => {
   const sky = fractionToSky(frame, p.fx, p.fy);
   // Brightness is not in the API yet (see Requests for backend), so only RA/Dec.
   readout.textContent =
-    "RA " + sky.ra.toFixed(4) + "°   Dec " + sky.dec.toFixed(4) + "°   (brightness: not available yet)";
+    "RA " +
+    sky.ra.toFixed(4) +
+    "°   Dec " +
+    sky.dec.toFixed(4) +
+    "°   (brightness: not available yet)";
 
   if (magnifierToggle.checked) {
     const stageBox = stage.getBoundingClientRect();
@@ -291,10 +334,13 @@ stage.addEventListener("mousemove", (event) => {
     lens.style.left = event.clientX - stageBox.left - LENS_SIZE / 2 + "px";
     lens.style.top = event.clientY - stageBox.top - LENS_SIZE / 2 + "px";
     lens.style.backgroundImage = 'url("' + frame.image_url + '")';
-    lens.style.backgroundSize = p.rect.width * LENS_ZOOM + "px " + p.rect.height * LENS_ZOOM + "px";
+    lens.style.backgroundSize =
+      p.rect.width * LENS_ZOOM + "px " + p.rect.height * LENS_ZOOM + "px";
     lens.style.backgroundPosition =
-      -(p.fx * p.rect.width * LENS_ZOOM - LENS_SIZE / 2) + "px " +
-      -(p.fy * p.rect.height * LENS_ZOOM - LENS_SIZE / 2) + "px";
+      -(p.fx * p.rect.width * LENS_ZOOM - LENS_SIZE / 2) +
+      "px " +
+      -(p.fy * p.rect.height * LENS_ZOOM - LENS_SIZE / 2) +
+      "px";
   } else {
     lens.hidden = true;
   }
@@ -322,9 +368,13 @@ function realCheck(index) {
   const now = frames[index];
   const before = frames[index - 1];
   if (now.detector !== before.detector) {
-    return { level: "warn", text: "Detector changed: a jump may not be real motion" };
+    return {
+      level: "warn",
+      text: "Detector changed: a jump may not be real motion",
+    };
   }
-  const change = Math.abs(now.wavelength_um - before.wavelength_um) / before.wavelength_um;
+  const change =
+    Math.abs(now.wavelength_um - before.wavelength_um) / before.wavelength_um;
   if (change > WAVE_CHANGE_LIMIT) {
     return { level: "warn", text: "Wavelength changed: brightness may differ" };
   }
@@ -350,7 +400,8 @@ function showFrame(index) {
   // Task 12: info panel
   info.date.textContent = frame.obs_time;
   // API_GUIDE: detector 0 means "several detectors stacked"
-  info.detector.textContent = frame.detector === 0 ? "several (stacked)" : frame.detector;
+  info.detector.textContent =
+    frame.detector === 0 ? "several (stacked)" : frame.detector;
   info.wave.textContent = Number(frame.wavelength_um).toFixed(3) + " µm";
   info.stacked.textContent = frame.n_stacked;
   info.source.textContent = source;
@@ -398,7 +449,12 @@ function buildStrip() {
     const block = document.createElement("button");
     block.type = "button";
     block.style.background = "hsl(" + Math.round(270 - 270 * t) + ", 85%, 55%)";
-    const label = "Frame " + (i + 1) + ": " + Number(frame.wavelength_um).toFixed(2) + " µm";
+    const label =
+      "Frame " +
+      (i + 1) +
+      ": " +
+      Number(frame.wavelength_um).toFixed(2) +
+      " µm";
     block.title = label;
     block.setAttribute("aria-label", label);
     block.addEventListener("click", () => {
@@ -462,11 +518,14 @@ async function loadFrames(ra, dec) {
     slider.max = String(frames.length - 1);
     slider.disabled = frames.length < 2;
     playButton.disabled = frames.length < 2;
+    gifButton.disabled = false;
 
     buildStrip();
     buildBlinkChoices();
     showFrame(0);
-    setStatus("Loaded " + frames.length + " frames (source: " + data.source + ").");
+    setStatus(
+      "Loaded " + frames.length + " frames (source: " + data.source + ").",
+    );
     loadExpected(); // Task 22 (does nothing if the toggle is off)
   } catch (error) {
     if (thisRequest !== latestRequest) return;
@@ -477,6 +536,7 @@ async function loadFrames(ra, dec) {
     stageMessage.textContent = "No image to show.";
     slider.disabled = true;
     playButton.disabled = true;
+    gifButton.disabled = true;
     clearInfo();
     setStatus(error.message, true);
   } finally {
@@ -541,7 +601,7 @@ function findTarget(typedName) {
       (t) =>
         simplifyName(t.id) === wanted ||
         simplifyName(t.label) === wanted ||
-        simplifyName(t.simbad_name) === wanted
+        simplifyName(t.simbad_name) === wanted,
     ) || null
   );
 }
@@ -558,7 +618,10 @@ nameForm.addEventListener("submit", (event) => {
   const target = findTarget(nameInput.value);
   if (!target) {
     const known = targets.map((t) => t.label).join(", ");
-    setStatus("Name not found. For now only these targets work by name: " + known + ".", true);
+    setStatus(
+      "Name not found. For now only these targets work by name: " + known + ".",
+      true,
+    );
     return;
   }
   goToTarget(target);
@@ -585,7 +648,9 @@ async function loadLimits() {
     const data = await fetchJson("/api/limits");
     const { min, max, default: def } = data.fov_arcmin;
     // Some handy sizes inside the allowed range, plus min, default and max.
-    const sizes = [min, 3, def, 10, 15, max].filter((v) => v >= min && v <= max);
+    const sizes = [min, 3, def, 10, 15, max].filter(
+      (v) => v >= min && v <= max,
+    );
     const unique = Array.from(new Set(sizes)).sort((a, b) => a - b);
     fovSelect.replaceChildren();
     unique.forEach((value) => {
@@ -666,7 +731,12 @@ speedSelect.addEventListener("change", () => {
 document.addEventListener("keydown", (event) => {
   const el = event.target;
   // Leave typing boxes, dropdowns, checkboxes and the slider alone (they use these keys).
-  if (el.matches("input[type=text], input[type=range], input[type=checkbox], select, textarea")) return;
+  if (
+    el.matches(
+      "input[type=text], input[type=range], input[type=checkbox], select, textarea",
+    )
+  )
+    return;
   if (event.code === "Space") {
     if (el.tagName === "BUTTON") return; // a focused button handles Space itself
     event.preventDefault(); // stop the page from scrolling
@@ -680,9 +750,13 @@ document.addEventListener("keydown", (event) => {
 
 // Task 7: swipe on the picture (phones). Left = next, right = previous.
 let touchStartX = null;
-stage.addEventListener("touchstart", (event) => {
-  touchStartX = event.touches[0].clientX;
-}, { passive: true });
+stage.addEventListener(
+  "touchstart",
+  (event) => {
+    touchStartX = event.touches[0].clientX;
+  },
+  { passive: true },
+);
 stage.addEventListener("touchend", (event) => {
   if (touchStartX === null) return;
   const dx = event.changedTouches[0].clientX - touchStartX;
@@ -737,20 +811,58 @@ blinkButton.addEventListener("click", () => {
   else stopBlink();
 });
 
+// Task 25: download the animation as a GIF (calls /api/animation.gif)
+gifButton.addEventListener("click", async () => {
+  if (!lastRa || !lastDec) return;
+  const params = currentParams(lastRa, lastDec);
+  params.set("speed_ms", speedSelect.value); // 200, 500 or 1000: all allowed (20-5000)
+  setStatus("Making the GIF...");
+  try {
+    const response = await fetch("/api/animation.gif?" + params.toString());
+    if (!response.ok) {
+      let message = "Could not make the GIF (code " + response.status + ").";
+      try {
+        message = (await response.json()).detail || message;
+      } catch (e) {}
+      throw new Error(message);
+    }
+    const blob = await response.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "sky-animation.gif";
+    link.click();
+    URL.revokeObjectURL(link.href);
+    setStatus("GIF saved.");
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+});
+
 // ---------------------------------------------------------------
 // 16. Task 26: download the marker positions as a CSV (made in the browser)
 // ---------------------------------------------------------------
 csvButton.addEventListener("click", () => {
   if (!marker || frames.length === 0) {
-    setStatus("Click the picture to place a marker first, then download.", true);
+    setStatus(
+      "Click the picture to place a marker first, then download.",
+      true,
+    );
     return;
   }
-  const rows = ["frame,obs_time,detector,wavelength_um,marker_ra_deg,marker_dec_deg"];
+  const rows = [
+    "frame,obs_time,detector,wavelength_um,marker_ra_deg,marker_dec_deg",
+  ];
   frames.forEach((frame, i) => {
-    rows.push([
-      i + 1, frame.obs_time, frame.detector, frame.wavelength_um,
-      marker.ra.toFixed(6), marker.dec.toFixed(6),
-    ].join(","));
+    rows.push(
+      [
+        i + 1,
+        frame.obs_time,
+        frame.detector,
+        frame.wavelength_um,
+        marker.ra.toFixed(6),
+        marker.dec.toFixed(6),
+      ].join(","),
+    );
   });
   const blob = new Blob([rows.join("\n") + "\n"], { type: "text/csv" });
   const link = document.createElement("a");
@@ -770,7 +882,10 @@ copyButton.addEventListener("click", async () => {
     setStatus("Link copied.");
   } catch (error) {
     // Clipboard can be blocked (for example on plain http outside localhost).
-    setStatus("Could not copy. Copy the address from the browser bar instead.", true);
+    setStatus(
+      "Could not copy. Copy the address from the browser bar instead.",
+      true,
+    );
   }
 });
 
@@ -802,7 +917,8 @@ async function start() {
 
   // "target" is a page-only setting: it remembers which preset was used.
   const urlTarget = url.get("target");
-  if (urlTarget && targets.some((t) => t.id === urlTarget)) currentTargetId = urlTarget;
+  if (urlTarget && targets.some((t) => t.id === urlTarget))
+    currentTargetId = urlTarget;
 
   if (ra && dec) {
     raInput.value = ra;
@@ -814,4 +930,141 @@ async function start() {
     if (wise) goToTarget(wise);
   }
 }
+// ---------------------------------------------------------------
+// 19. Task 30: reset view (puts every setting back to its start)
+// ---------------------------------------------------------------
+const resetButton = document.getElementById("reset-view");
+const advancedPanel = document.getElementById("advanced");
+
+resetButton.addEventListener("click", () => {
+  pause();
+  setMode("normal");
+  stretchSelect.value = "sqrt"; // the default in index.html
+  matchToggle.checked = false;
+  refSelect.value = "first";
+  groupSelect.value = "detector";
+  // The FOV option that loadLimits() labelled "(default)"
+  const defaultFov = Array.from(fovSelect.options).find((o) =>
+    o.textContent.includes("(default)"),
+  );
+  if (defaultFov) fovSelect.value = defaultFov.value;
+  marker = null;
+  showExpected = false;
+  expectedToggle.checked = false;
+  magnifierToggle.checked = false;
+  lens.hidden = true;
+  reload(); // loads the same position with the starting settings
+  setStatus("View reset.");
+});
+
+// ---------------------------------------------------------------
+// 20. Task 32: guided mission (find the moving dot of WISE 0855)
+// ---------------------------------------------------------------
+const missionStart = document.getElementById("mission-start");
+const missionBox = document.getElementById("mission-box");
+const missionCount = document.getElementById("mission-count");
+const missionTitle = document.getElementById("mission-title");
+const missionText = document.getElementById("mission-text");
+const missionBack = document.getElementById("mission-back");
+const missionNext = document.getElementById("mission-next");
+const missionExit = document.getElementById("mission-exit");
+
+// Each step has a title, a text, and (optionally) "run": something the page
+// does for you when you press Next to arrive at that step.
+const MISSION_STEPS = [
+  {
+    title: "Your target",
+    text: "WISE 0855 is a brown dwarf: a failed star, very faint and very close to us. It moves across the sky faster than almost anything else. Your mission is to see it move. Press Next and I will load it.",
+    run: null,
+  },
+  {
+    title: "Load the pictures",
+    text: "I have loaded WISE 0855 with the normal view. Wait for the pictures to finish loading (the status line under the picture will say so).",
+    run: () => {
+      const wise = targets.find((t) => t.id === "wise0855");
+      if (!wise) {
+        setStatus("WISE 0855 is not available. Is the server running?", true);
+        return;
+      }
+      setMode("normal");
+      goToTarget(wise);
+    },
+  },
+  {
+    title: "Press Play",
+    text: "Press Play (or the Space key). Most dots are stars and stay put. Look for the one dot that changes place from frame to frame.",
+    run: null,
+  },
+  {
+    title: "Go slowly",
+    text: "Now step through one frame at a time with the left and right arrow keys, or drag the slider. Follow the dot with your eyes. Note: the practice (mock) data moves its dot about 10 times faster than the real star, so it is easy to see.",
+    run: null,
+  },
+  {
+    title: "Blink compare",
+    text: "I opened Advanced tools for you. Under Blink compare, frame A is the first frame and B is the last. Press Blink: the moving dot seems to jump back and forth. Astronomers found Pluto this way.",
+    run: () => {
+      advancedPanel.open = true;
+    },
+  },
+  {
+    title: "Difference view",
+    text: "I switched to Difference view. Grey means nothing changed. Stars vanish, and the mover shows up as a white or black spot. Press Play to watch it.",
+    run: () => {
+      setMode("difference");
+      reload();
+    },
+  },
+  {
+    title: "Where should it be?",
+    text: "I switched back to Normal and turned on Expected path. The dashed line shows where known motion says WISE 0855 should be. On the practice (mock) data the dot moves faster than the real star, so the line only matches the dot in the first frame. On real data they should line up.",
+    run: () => {
+      showExpected = true; // loadFrames() draws the path once the pictures are in
+      expectedToggle.checked = true;
+      setMode("normal");
+      reload();
+      advancedPanel.open = true;
+    },
+  },
+  {
+    title: "Is it real?",
+    text: "Last check: look at 'Is it real?' in Frame info. Green is fine. Yellow means the detector or the colour changed, so a jump might come from the instrument and not from real motion. Well done, mission complete!",
+    run: null,
+  },
+];
+
+let missionIndex = 0;
+
+function showMissionStep(index, runIt) {
+  missionIndex = index;
+  const step = MISSION_STEPS[index];
+  missionCount.textContent =
+    "Step " + (index + 1) + " of " + MISSION_STEPS.length;
+  missionTitle.textContent = step.title;
+  missionText.textContent = step.text;
+  missionBack.disabled = index === 0;
+  missionNext.textContent =
+    index === MISSION_STEPS.length - 1 ? "Finish" : "Next";
+  // Only run the action when moving forward, so Back never changes the page.
+  if (runIt && step.run) step.run();
+}
+
+function closeMission() {
+  missionBox.hidden = true;
+  missionStart.hidden = false;
+}
+
+missionStart.addEventListener("click", () => {
+  missionStart.hidden = true;
+  missionBox.hidden = false;
+  showMissionStep(0, false);
+});
+missionNext.addEventListener("click", () => {
+  if (missionIndex >= MISSION_STEPS.length - 1) closeMission();
+  else showMissionStep(missionIndex + 1, true);
+});
+missionBack.addEventListener("click", () => {
+  if (missionIndex > 0) showMissionStep(missionIndex - 1, false);
+});
+missionExit.addEventListener("click", closeMission);
 start();

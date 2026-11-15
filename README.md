@@ -9,8 +9,7 @@ date, so a moving or changing object can be spotted like in a short video.
 - The backend (FastAPI) works on **mock data** (fake FITS files made by `data_mock.py`).
 - **Real SPHEREx data is not connected yet.** With `USE_MOCK = False` in `config.py`
   every frames request answers HTTP 501. `data_irsa.py` is only a skeleton.
-- The web page (`frontend/`) is **not built yet**. The server already serves any file
-  in `frontend/`, and everything below can be tried in the browser through the API.
+- The web page (`frontend/`) is built (plain HTML, CSS and JavaScript). Open http://127.0.0.1:8000/ with the server running. Still missing: spectrum plot, flags display, overlays, colour picture, motion trail and the practice game page (the backend has the code but no endpoints for them yet).
 
 ## Setup (Windows, PowerShell)
 

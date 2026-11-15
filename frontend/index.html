@@ -4,9 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SPHEREx Sky Blink</title>
+    <!-- Task 30: description and favicon (an emoji drawn inline, no extra file) -->
+    <meta
+      name="description"
+      content="Type a spot in the sky and watch SPHEREx images play like a short video to spot moving objects."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔭%3C/text%3E%3C/svg%3E"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- Task 30: lets keyboard users jump past the picture to the controls -->
+    <a class="skip-link" href="#controls">Skip to the controls</a>
+
     <header class="site-header">
       <h1>SPHEREx Sky Blink</h1>
       <p>Type a spot in the sky and watch what moves.</p>
@@ -17,9 +29,17 @@
       <section class="stage-area" aria-label="Sky images">
         <div class="stage" id="stage">
           <img id="sky-image" alt="No sky image loaded yet" hidden />
-          <p id="stage-message" class="stage-message">Enter coordinates and press Go.</p>
+          <p id="stage-message" class="stage-message">
+            Enter coordinates and press Go.
+          </p>
           <!-- Task 14: loading spinner -->
-          <div id="spinner" class="spinner" role="progressbar" aria-label="Loading" hidden></div>
+          <div
+            id="spinner"
+            class="spinner"
+            role="progressbar"
+            aria-label="Loading"
+            hidden
+          ></div>
           <!-- Tasks 21-22: marker circle and expected path are drawn here by app.js -->
           <svg id="overlay" class="overlay" aria-hidden="true"></svg>
           <!-- Task 24: magnifier lens -->
@@ -27,19 +47,37 @@
         </div>
 
         <!-- Task 23: RA/Dec under the mouse -->
-        <p id="readout" class="readout" aria-live="off">Move the mouse over the picture to see RA/Dec.</p>
+        <p id="readout" class="readout" aria-live="off">
+          Move the mouse over the picture to see RA/Dec.
+        </p>
 
         <div class="player" aria-label="Animation player">
-          <button id="play-button" type="button" disabled>Play</button>
+          <button
+            id="play-button"
+            type="button"
+            title="Play or pause (Space)"
+            disabled
+          >
+            Play
+          </button>
           <label class="visually-hidden" for="frame-slider">Frame</label>
-          <input id="frame-slider" type="range" min="0" max="0" value="0" step="1" disabled />
+          <input
+            id="frame-slider"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+            step="1"
+            title="Choose a frame (left and right arrow keys also step)"
+            disabled
+          />
           <!-- Task 6: frame counter + loop switch -->
           <span id="frame-counter" class="counter" aria-live="off">0 / 0</span>
           <label class="loop-label" title="Start again after the last frame">
             <input id="loop-toggle" type="checkbox" checked /> Loop
           </label>
           <label for="speed-select">Speed</label>
-          <select id="speed-select">
+          <select id="speed-select" title="How fast the frames change">
             <option value="1000">Slow</option>
             <option value="500" selected>Normal</option>
             <option value="200">Fast</option>
@@ -47,14 +85,83 @@
         </div>
 
         <!-- Task 13: wavelength colour strip (buttons are added by app.js) -->
-        <div id="wave-strip" class="wave-strip" aria-label="Frames by wavelength"></div>
-        <p class="strip-caption"><span id="strip-min"></span><span id="strip-max"></span></p>
+        <div
+          id="wave-strip"
+          class="wave-strip"
+          aria-label="Frames by wavelength"
+        ></div>
+        <p class="strip-caption">
+          <span id="strip-min"></span><span id="strip-max"></span>
+        </p>
 
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
 
-      <!-- RIGHT: controls -->
-      <section class="controls" aria-label="Where to look">
+      <!-- RIGHT: controls (tabindex -1 so the skip link can move focus here) -->
+      <section
+        class="controls"
+        id="controls"
+        tabindex="-1"
+        aria-label="Where to look"
+      >
+        <!-- Task 31: beginner tutorial (plain HTML, closed until opened) -->
+        <details class="panel tutorial" id="tutorial">
+          <summary>How to spot a moving object</summary>
+          <ol>
+            <li>
+              Click a test target below (try <strong>WISE 0855</strong>), or
+              type coordinates and press <strong>Go</strong>.
+            </li>
+            <li>
+              Press <strong>Play</strong>. Stars stay in the same place in every
+              picture.
+            </li>
+            <li>
+              Look for a dot that is in a different place from one frame to the
+              next. That dot is moving.
+            </li>
+            <li>
+              Slow down: pick <strong>Slow</strong> speed, or step one frame at
+              a time with the left and right arrow keys.
+            </li>
+            <li>
+              Try <strong>Difference</strong> view. Grey means no change. Things
+              that moved show up as white or black spots.
+            </li>
+            <li>
+              Open <strong>Advanced tools</strong> and use
+              <strong>Blink</strong> to flip between the first and last frame. A
+              mover seems to jump.
+            </li>
+            <li>
+              Check <strong>Is it real?</strong> in Frame info. A yellow warning
+              means the detector or colour changed, so a jump might not be real
+              motion.
+            </li>
+          </ol>
+        </details>
+
+        <!-- Task 32: guided mission (text and buttons are filled in by app.js) -->
+        <div class="panel" id="mission-panel">
+          <h2>Guided mission</h2>
+          <p class="hint">
+            A short step-by-step lesson: find the moving dot of WISE 0855.
+          </p>
+          <button id="mission-start" type="button">Start mission</button>
+          <div id="mission-box" class="mission-box" aria-live="polite" hidden>
+            <p id="mission-count" class="mission-count"></p>
+            <h3 id="mission-title"></h3>
+            <p id="mission-text"></p>
+            <div class="mission-buttons">
+              <button id="mission-back" type="button">Back</button>
+              <button id="mission-next" type="button">Next</button>
+              <button id="mission-exit" type="button" title="Close the mission">
+                Exit
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Task 8: preset buttons (added by app.js from /api/targets) -->
         <div class="panel">
           <h2>Test targets</h2>
@@ -64,21 +171,45 @@
         <form id="name-form" class="panel">
           <h2>Search by name</h2>
           <label for="name-input">Target name</label>
-          <input id="name-input" type="text" placeholder="Barnard's Star" autocomplete="off" />
-          <button type="submit">Find</button>
+          <input
+            id="name-input"
+            type="text"
+            placeholder="Barnard's Star"
+            autocomplete="off"
+          />
+          <button type="submit" title="Look up a target by name">Find</button>
           <p class="hint">Works for the five test targets only, for now.</p>
         </form>
 
         <form id="coord-form" class="panel">
           <h2>Or type coordinates</h2>
           <label for="ra-input">RA</label>
-          <input id="ra-input" type="text" placeholder="133.79 or 08h55m10.8s" autocomplete="off" required />
+          <input
+            id="ra-input"
+            type="text"
+            placeholder="133.79 or 08h55m10.8s"
+            autocomplete="off"
+            required
+          />
           <label for="dec-input">Dec</label>
-          <input id="dec-input" type="text" placeholder="-7.25 or -07d14m42s" autocomplete="off" required />
+          <input
+            id="dec-input"
+            type="text"
+            placeholder="-7.25 or -07d14m42s"
+            autocomplete="off"
+            required
+          />
           <!-- Task 11: field of view (options are added by app.js from /api/limits) -->
           <label for="fov-select">Field of view (arcminutes)</label>
-          <select id="fov-select"><option value="">Default</option></select>
-          <button type="submit">Go</button>
+          <select id="fov-select" title="How wide a patch of sky to show">
+            <option value="">Default</option>
+          </select>
+          <button
+            type="submit"
+            title="Load the sky images for these coordinates"
+          >
+            Go
+          </button>
           <p class="hint">Degrees or hours/minutes/seconds both work.</p>
         </form>
 
@@ -86,33 +217,77 @@
         <div class="panel" aria-label="Frame info">
           <h2>Frame info</h2>
           <dl class="info-list">
-            <dt>Date</dt><dd id="info-date">-</dd>
-            <dt>Detector</dt><dd id="info-detector">-</dd>
-            <dt>Wavelength</dt><dd id="info-wave">-</dd>
-            <dt>Frames stacked</dt><dd id="info-stacked">-</dd>
-            <dt>Source</dt><dd id="info-source">-</dd>
+            <dt>Date</dt>
+            <dd id="info-date">-</dd>
+            <dt>Detector</dt>
+            <dd id="info-detector">-</dd>
+            <dt>Wavelength</dt>
+            <dd id="info-wave">-</dd>
+            <dt>Frames stacked</dt>
+            <dd id="info-stacked">-</dd>
+            <dt>Source</dt>
+            <dd id="info-source">-</dd>
             <!-- Task 28 -->
-            <dt>Is it real?</dt><dd id="info-real">-</dd>
-            <dt>Flags</dt><dd id="info-flags">Not available yet</dd>
+            <dt>Is it real?</dt>
+            <dd id="info-real">-</dd>
+            <dt>Flags</dt>
+            <dd id="info-flags">Not available yet</dd>
           </dl>
         </div>
 
         <!-- Tasks 16-17: how the pictures are made -->
         <div class="panel">
           <h2>View</h2>
-          <div class="segmented" id="mode-buttons" role="group" aria-label="Picture mode">
-            <button type="button" class="mode-btn active" data-mode="normal" aria-pressed="true" title="Every frame as it is">Normal</button>
-            <button type="button" class="mode-btn" data-mode="difference" aria-pressed="false" title="Subtract a frame so only changes remain">Difference</button>
-            <button type="button" class="mode-btn" data-mode="stack" aria-pressed="false" title="Add frames together to see faint things">Stack</button>
+          <div
+            class="segmented"
+            id="mode-buttons"
+            role="group"
+            aria-label="Picture mode"
+          >
+            <button
+              type="button"
+              class="mode-btn active"
+              data-mode="normal"
+              aria-pressed="true"
+              title="Every frame as it is"
+            >
+              Normal
+            </button>
+            <button
+              type="button"
+              class="mode-btn"
+              data-mode="difference"
+              aria-pressed="false"
+              title="Subtract a frame so only changes remain"
+            >
+              Difference
+            </button>
+            <button
+              type="button"
+              class="mode-btn"
+              data-mode="stack"
+              aria-pressed="false"
+              title="Add frames together to see faint things"
+            >
+              Stack
+            </button>
           </div>
           <label for="stretch-select">Brightness curve</label>
-          <select id="stretch-select">
+          <select
+            id="stretch-select"
+            title="How brightness is turned into grey levels"
+          >
             <option value="linear">Linear</option>
             <option value="sqrt" selected>Square root</option>
             <option value="log">Log</option>
             <option value="asinh">Asinh</option>
           </select>
-          <label class="check"><input id="match-toggle" type="checkbox" /> <span>Match background</span></label>
+          <label
+            class="check"
+            title="Make the background level the same in every frame"
+            ><input id="match-toggle" type="checkbox" />
+            <span>Match background</span></label
+          >
           <div id="ref-row" hidden>
             <label for="ref-select">Subtract</label>
             <select id="ref-select">
@@ -129,43 +304,118 @@
           </div>
         </div>
 
-        <!-- Tasks 18-24: blink and tools -->
-        <div class="panel">
-          <h2>Blink compare</h2>
-          <div class="row">
-            <label for="blink-a">A</label><select id="blink-a"></select>
-            <label for="blink-b">B</label><select id="blink-b"></select>
+        <!-- Task 30: the extra tools hide in one box until needed -->
+        <details class="advanced" id="advanced">
+          <summary>Advanced tools (blink, markers, saving)</summary>
+          <div class="advanced-body">
+            <!-- Task 18: blink -->
+            <div class="panel">
+              <h2>Blink compare</h2>
+              <div class="row">
+                <label for="blink-a">A</label
+                ><select
+                  id="blink-a"
+                  aria-label="Blink: first frame (A)"
+                ></select>
+                <label for="blink-b">B</label
+                ><select
+                  id="blink-b"
+                  aria-label="Blink: second frame (B)"
+                ></select>
+              </div>
+              <button
+                id="blink-button"
+                type="button"
+                title="Flip quickly between frame A and frame B"
+                disabled
+              >
+                Blink
+              </button>
+            </div>
+
+            <div class="panel">
+              <h2>Tools</h2>
+              <label class="check"
+                ><input id="expected-toggle" type="checkbox" />
+                <span>Expected path (preset targets)</span></label
+              >
+              <label class="check" title="Needs a backend endpoint"
+                ><input id="trail-toggle" type="checkbox" disabled />
+                <span>Motion trail (not available yet)</span></label
+              >
+              <label class="check" title="Needs a backend endpoint"
+                ><input id="colour-toggle" type="checkbox" disabled />
+                <span>Colour picture (not available yet)</span></label
+              >
+              <label class="check"
+                ><input id="magnifier-toggle" type="checkbox" />
+                <span>Magnifier</span></label
+              >
+              <p class="hint">
+                Click the picture to place a marker circle. It stays at that sky
+                position in every frame.
+              </p>
+              <button
+                id="clear-marker"
+                type="button"
+                title="Remove the marker circle"
+              >
+                Clear marker
+              </button>
+            </div>
+
+            <div class="panel">
+              <h2>Save</h2>
+              <button
+                id="gif-button"
+                type="button"
+                disabled
+                title="Download the animation as a GIF"
+              >
+                Download GIF
+              </button>
+              <button
+                id="csv-button"
+                type="button"
+                title="Marker position with each frame's date"
+              >
+                Download marker CSV
+              </button>
+            </div>
+
+            <!-- Task 27: reserved spaces for later features -->
+            <div class="panel">
+              <h2>Coming later</h2>
+              <div class="placeholder" id="spectrum-placeholder">
+                Spectrum plot: click a pixel to see brightness vs wavelength.
+              </div>
+              <div class="placeholder" id="flags-placeholder">
+                Flags legend: which pixels are unreliable.
+              </div>
+              <label class="check"
+                ><input id="overlay-toggle" type="checkbox" disabled />
+                <span>Gaia / WISE star markers (not available yet)</span></label
+              >
+            </div>
           </div>
-          <button id="blink-button" type="button" disabled>Blink</button>
-        </div>
+        </details>
 
+        <!-- Tasks 10 and 30: copy link and reset view -->
         <div class="panel">
-          <h2>Tools</h2>
-          <label class="check"><input id="expected-toggle" type="checkbox" /> <span>Expected path (preset targets)</span></label>
-          <label class="check" title="Needs a backend endpoint"><input id="trail-toggle" type="checkbox" disabled /> <span>Motion trail (not available yet)</span></label>
-          <label class="check" title="Needs a backend endpoint"><input id="colour-toggle" type="checkbox" disabled /> <span>Colour picture (not available yet)</span></label>
-          <label class="check"><input id="magnifier-toggle" type="checkbox" /> <span>Magnifier</span></label>
-          <p class="hint">Click the picture to place a marker circle. It stays at that sky position in every frame.</p>
-          <button id="clear-marker" type="button">Clear marker</button>
-        </div>
-
-        <div class="panel">
-          <h2>Save</h2>
-          <button id="gif-button" type="button" disabled title="Needs a backend endpoint">GIF (not available yet)</button>
-          <button id="csv-button" type="button" title="Marker position with each frame's date">Download marker CSV</button>
-        </div>
-
-        <!-- Task 27: reserved spaces for later features -->
-        <div class="panel">
-          <h2>Coming later</h2>
-          <div class="placeholder" id="spectrum-placeholder">Spectrum plot: click a pixel to see brightness vs wavelength.</div>
-          <div class="placeholder" id="flags-placeholder">Flags legend: which pixels are unreliable.</div>
-          <label class="check"><input id="overlay-toggle" type="checkbox" disabled /> <span>Gaia / WISE star markers (not available yet)</span></label>
-        </div>
-
-        <!-- Task 10: copy link -->
-        <div class="panel">
-          <button id="copy-link" type="button">Copy link</button>
+          <button
+            id="copy-link"
+            type="button"
+            title="Copy a link to this exact view"
+          >
+            Copy link
+          </button>
+          <button
+            id="reset-view"
+            type="button"
+            title="Put every setting back to its starting value"
+          >
+            Reset view
+          </button>
         </div>
       </section>
     </main>

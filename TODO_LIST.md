@@ -226,6 +226,7 @@ This file replaces Todo_List.pdf. Nothing is ticked.
         Pick a host, set limits to protect the server, and test from another device.
 29. [ ] Update docs and commit (Part G)
         Record what works in PROGRESS.md and DATA_NOTES.md. Update the README.
+30. [ ] Re-align frames and default frame limit (new): resample all cutouts onto one pixel grid, then apply a default limit (for example one detector). Needed before difference, stack, trail, colour, movers and GIF work on real data.
 
 ---
 
@@ -285,3 +286,4 @@ This file replaces Todo_List.pdf. Nothing is ticked.
         Update the mission steps with real WISE 0855 frames and screenshots.
 27. [ ] Demo materials (M9) (Part G)
         Record a demo video, take screenshots and write a short script for judges.
+28. [ ] Many frames (new): load only some frames at first and preload lazily (one position has 258).

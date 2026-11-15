@@ -77,19 +77,7 @@ ORDER BY p.time_bounds_lower
 """
 
 def search_images(ra_deg, dec_deg, fov_arcmin):
-    """WILL ask IRSA which SPHEREx images cover this position.
-
-    Returns a list of dictionaries sorted by observation time, each with:
-      cutout_url    link that returns a cutout of that image (tutorial: the
-                    TAP query builds it from a.uri + '?center=RA,DECd&size=...')
-      obs_time_raw  the archive's time value (tutorial: p.time_bounds_lower;
-                    unit and format UNVERIFIED, probably MJD)
-      bandpass      e.g. 'SPHEREx-D2' (tutorial: p.energy_bandpassname)
-    Live query, no list of files is kept (see Backend 27).
-    Needs the network. A slow answer must raise TimeoutError so main.py can
-    turn it into HTTP 504.
-    Use build_search_query() for the query text.
-    """
+    """Asks IRSA's SIA service (Irsa.query_sia, collections from config.SPHEREX_SIA_COLLECTIONS) which images cover this position. Sort by t_min (an MJD). Cutout link = access_url + ?center=RA,DECd&size=DEGREES (verified 2026-11-15)."""
     _not_written("search_images", 2)
 
 
@@ -111,8 +99,7 @@ def read_cutout(hdulist, source_url, obs_time):
     Planned mapping:
       image          <- extension IMAGE (surface brightness, MJy/sr)      (tutorial)
       wcs            <- WCS(IMAGE header), the sky WCS of the cutout       (tutorial)
-      obs_time       <- passed in from the search (UTC datetime); which header
-                        card holds the observation time is UNVERIFIED
+      obs_time <- header DATE-OBS or MJD-OBS (verified 2026-11-15). NOT the DATE card: that is the processing date.
       wavelength_um  <- spectral WCS (key "W") at the cutout centre.       (tutorial)
                         Wavelength varies across a detector, so this is the
                         centre-pixel value.

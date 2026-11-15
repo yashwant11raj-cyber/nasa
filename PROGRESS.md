@@ -48,6 +48,7 @@ Backend after-data, task 1
 - Todo Backend 37: run*all_tests.py runs every test*\*.py (no pytest) and prints a summary; exit code 1 if any file fails.
 - Todo Backend 38: README.md written (setup, run, endpoints, URL settings, data release, tests). requirements.txt unchanged (no new library).
 - Todo Backend 39: docs/FUTURE_WORK.md written.
+- Full test run (2026-11-15): X of Y test files OK. Failures/skips: (list names, or "none").
 
 ## In progress
 
@@ -55,7 +56,7 @@ Backend after-data, task 1
 
 ## Next step
 
-- Check the data and start to work on backend to do after data
+- Inspect real files (after-data #1), then #2 search, #3 download, #4 read.
 
 ## Decisions made
 

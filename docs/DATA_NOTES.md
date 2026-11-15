@@ -29,6 +29,5 @@
 - FLAGS header holds 22 flag bits (MSKN/MSKD); same list as in IRSA's tutorial.
 - IMAGE (first cutout): 0.0% NaN, min -2.043, median 0.149, max 33.11 MJy/sr.
 - Downloads: 18.5 s, 26.8 s (after one HTTPError retry), 13.5 s per cutout.
-- Picture of the first cutout: (look at cache/test_png/real_first_cutout.png and write here
-  whether WISE 0855 is visible)
+- Picture of the first cutout: the centre is empty. Possible centring or proper-motion problem. Check in after-data #12.
 - Surprises: cutouts differ in size by a pixel; one position has 258 images.

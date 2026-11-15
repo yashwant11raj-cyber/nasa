@@ -269,3 +269,36 @@ body.embed .layout { grid-template-columns: 1fr; padding: 0.5rem; }
   .info-list { font-size: 0.95rem; }
   .lens { display: none; } /* no mouse on a phone */
 }
+/* ===== Tasks 30-32 ===== */
+
+/* Task 30: skip link is off-screen until it gets keyboard focus */
+.skip-link {
+  position: absolute; left: -999px; top: 0; z-index: 10;
+  background: var(--accent); color: var(--accent-text);
+  padding: 0.5rem 1rem; font-weight: 600;
+}
+.skip-link:focus { left: 0; }
+.controls:focus { outline: none; } /* it only receives focus from the skip link */
+
+/* Task 30: colour-blind help. A symbol in front of the badge text, so colour is not the only clue. */
+.badge.ok::before { content: "✓ "; }
+.badge.warn::before { content: "▲ "; }
+.badge.bad::before { content: "✖ "; }
+
+/* Task 30: the "Advanced tools" box */
+.advanced { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 1rem; }
+.advanced > summary, details.panel > summary { cursor: pointer; font-weight: 600; }
+.advanced-body { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.75rem; }
+details.panel { display: block; } /* a <details> panel should not be a flex box */
+
+/* Task 31: tutorial list */
+.tutorial ol { margin: 0.6rem 0 0; padding-left: 1.2rem; font-size: 0.9rem; }
+.tutorial li { margin-bottom: 0.4rem; }
+
+/* Task 32: guided mission box */
+.mission-box { border-top: 1px solid var(--line); margin-top: 0.5rem; padding-top: 0.6rem; }
+.mission-box h3 { margin: 0.2rem 0; font-size: 1rem; }
+.mission-box p { margin: 0.3rem 0; font-size: 0.9rem; }
+.mission-count { color: var(--muted); font-size: 0.8rem; }
+.mission-buttons { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.mission-buttons button { margin-top: 0.4rem; }

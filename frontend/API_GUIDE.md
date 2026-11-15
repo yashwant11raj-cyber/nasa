@@ -50,13 +50,25 @@ Base: same origin as the page (http://127.0.0.1:8000). Full interactive docs: /d
 6. GET /api/practice/check?ra=&dec=&frame=
    -> {hit, mover_id, label, frame, radius_arcsec, movers_total}
 
+7. GET /api/animation.gif?ra=&dec=&fov=&stretch=&mode=&match=&ref=&combine=&group=&speed_ms=
+   -> an animated GIF file (download). speed_ms is 20 to 5000 (default 200).
+   More than 50 frames gives 400 with a message suggesting mode=stack.
+
+8. GET /api/export.csv?ra=&dec=&fov=&mode=&combine=&group=&kind=&target=
+   -> a CSV file (download). kind=trail (default) finds the moving dot
+   automatically (needs at least 3 frames on the same grid).
+   kind=expected needs target=<preset id> (e.g. wise0855).
+   Columns: kind, frame, obs_time, detector, wavelength_um, n_stacked, x, y,
+   ra_deg, dec_deg, ok, snr. Empty cell = unknown.
+
 ## NOT available yet (do not build against these)
 
-- Name search (names.py exists but has no URL). Frontend Task 4: name box only
-  works for the 5 presets via /api/targets until a backend endpoint exists.
+- Name search (names.py has no URL). Name box only works for the 5 presets.
 - Motion trail and colour picture: functions exist, no endpoint.
-- Practice game frames (practice files are not served), GIF, CSV, flags,
-  "is it real?", spectrum, overlays: backend tasks 28-35 not done.
+  (/api/export.csv?kind=trail gives the same positions as a file only.)
+- Spectrum, flags, "is it real?", overlays: no endpoints.
+- Practice game frames: practice files are not served (only /api/practice/check works).
+- Brightness clip levels (black/white point): no parameter.
 
 ## Current data situation (Backend 25-27)
 
