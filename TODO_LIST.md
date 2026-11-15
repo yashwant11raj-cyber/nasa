@@ -97,87 +97,86 @@ This file replaces Todo_List.pdf. Nothing is ticked.
 
 ## 2. FRONTEND: Do now (before the data)
 
-1. [ ] Page skeleton (M4) (Part D)
-       Create index.html, app.js and style.css with the layout from the design sketch.
-2. [ ] Show one image (#2) (Part D)
-       Fetch one PNG from the API and display it on the page.
-3. [ ] RA/Dec form (#3) (Part D)
-       Add inputs and a Go button so typing new coordinates changes the image.
-4. [ ] Flexible coordinates and name search box (new) (Part D)
-       One box that accepts degrees, sexagesimal text or a name like "Barnard's Star".
-5. [ ] Animation player (#4) (Part D)
-       Add play/pause, a frame slider and a speed control that step through the frames.
-6. [ ] Frame counter and loop toggle (new) (Part D)
-       Show "5 / 12" next to the slider. Add a loop on/off switch.
-7. [ ] Keyboard shortcuts and swipe (new) (Part D)
-       Space = play/pause, arrow keys = step, swipe left/right on phones.
-8. [ ] Preset buttons (#8, #6) (Part D)
-       Create one button per test target, loaded from the targets endpoint.
-9. [ ] URL parameters (#7) (Part D)
-       Read settings from the URL on load. Update the URL whenever settings change.
-10. [ ] Copy-link button (new) (Part D)
-        One click copies the shareable URL.
-11. [ ] FOV control (#9) (Part D)
-        Add a dropdown or slider that reloads the frames at the new size.
-12. [ ] Frame info panel (#10) (Part D)
-        Show date, detector, wavelength and flags status for the frame on screen.
-13. [ ] Wavelength colour strip (new) (Part D)
-        A rainbow bar under the slider showing each frame's wavelength. Click a block to jump to that frame.
-14. [ ] Spinner and errors (#11) (Part D)
-        Show a loading indicator and display the API's friendly error messages.
-15. [ ] Stretch control (#12) (Part D)
-        Add a brightness slider that requests a new stretch from the API.
-16. [ ] Stretch type dropdown (new) (Part D)
-        Choose linear, sqrt, log or asinh. Add a "match background" checkbox.
-17. [ ] Mode switch (#13, #14) (Part D)
-        Add Normal / Difference / Stack buttons that change the request mode.
-18. [ ] Blink compare (new) (Part D)
-        Pick two frames and flip quickly between them, like the Pluto discoverers did.
-19. [ ] Colour picture toggle (new) (Part D)
-        A switch that shows the 3-wavelength colour image instead of grey.
-20. [ ] Embed mode (added) (Part D)
-        Add ?embed=1 to hide the header and extra controls for use inside other pages.
-21. [ ] Marker tool (#18) (Part D)
-        Let users click to place a circle that follows the same sky position through the frames.
-22. [ ] Trail and expected-path toggles (new) (Part D)
-        Draw a line through the dot's positions. Draw a second marker where proper motion says the star should be.
-23. [ ] Hover readout (new) (Part D)
-        Move the mouse over the image to see the pixel's brightness and its RA/Dec.
-24. [ ] Magnifier (new) (Part D)
-        A small zoom lens that enlarges the area under the mouse without reloading.
-25. [ ] GIF download button (#19) (Part D)
-        Add a button that calls the GIF endpoint and saves the file.
-26. [ ] Export CSV button (new) (Part D)
-        Download the marked positions and dates.
-27. [ ] Placeholders for extras (#15-#17) (Part D)
-        Reserve space for the spectrum plot, flags legend and overlay toggle (Aladin Lite or markers).
-28. [ ] "Is it real?" hint (new) (Part D)
-        A small badge on each frame: green = fine, yellow = detector or wavelength changed, red = flagged pixels near the target.
-29. [ ] Design and mobile layout (#20) (Part D)
-        Use a dark theme. Stack controls under the image on phones. Test at narrow widths.
-30. [ ] Polish and accessibility (new) (Part D)
-        Page title and favicon, tooltips on buttons, a "reset view" button, a hidden-until-needed advanced panel, colour-blind-friendly colours, labels for screen readers.
-31. [ ] Beginner tutorial (#20) (Part D)
-        Write a short "how to spot a moving object" panel with simple steps.
-32. [ ] Guided mission (new) (Part D)
-        An interactive step-by-step "find the moving dot" lesson using WISE 0855.
-33. [ ] Practice game page (new) (Part D)
-        Find hidden fake movers in the practice mock data. Shows a score using the answer-check endpoint.
+1. [✔] Page skeleton (M4) (Part D)
+   Create index.html, app.js and style.css with the layout from the design sketch.
+2. [✔] Show one image (#2) (Part D)
+   Fetch one PNG from the API and display it on the page.
+3. [✔] RA/Dec form (#3) (Part D)
+   Add inputs and a Go button so typing new coordinates changes the image.
+4. [✔] Flexible coordinates and name search box (new) (Part D)
+   One box that accepts degrees, sexagesimal text or a name like "Barnard's Star".
+5. [✔] Animation player (#4) (Part D)
+   Add play/pause, a frame slider and a speed control that step through the frames.
+6. [✔] Frame counter and loop toggle (new) (Part D)
+   Show "5 / 12" next to the slider. Add a loop on/off switch.
+7. [✔] Keyboard shortcuts and swipe (new) (Part D)
+   Space = play/pause, arrow keys = step, swipe left/right on phones.
+8. [✔] Preset buttons (#8, #6) (Part D)
+   Create one button per test target, loaded from the targets endpoint.
+9. [✔] URL parameters (#7) (Part D)
+   Read settings from the URL on load. Update the URL whenever settings change. 10.[✔] Copy-link button (new) (Part D)
+   One click copies the shareable URL.
+10. [✔] FOV control (#9) (Part D)
+    Add a dropdown or slider that reloads the frames at the new size.
+11. [✔] Frame info panel (#10) (Part D)
+    Show date, detector, wavelength and flags status for the frame on screen.
+12. [✔] Wavelength colour strip (new) (Part D)
+    A rainbow bar under the slider showing each frame's wavelength. Click a block to jump to that frame.
+13. [✔] Spinner and errors (#11) (Part D)
+    Show a loading indicator and display the API's friendly error messages.
+14. [✔] Stretch control (#12) (Part D)
+    Add a brightness slider that requests a new stretch from the API.
+15. [✔] Stretch type dropdown (new) (Part D)
+    Choose linear, sqrt, log or asinh. Add a "match background" checkbox.
+16. [✔] Mode switch (#13, #14) (Part D)
+    Add Normal / Difference / Stack buttons that change the request mode.
+17. [✔] Blink compare (new) (Part D)
+    Pick two frames and flip quickly between them, like the Pluto discoverers did.
+18. [✔] Colour picture toggle (new) (Part D)
+    A switch that shows the 3-wavelength colour image instead of grey.
+19. [✔] Embed mode (added) (Part D)
+    Add ?embed=1 to hide the header and extra controls for use inside other pages.
+20. [✔] Marker tool (#18) (Part D)
+    Let users click to place a circle that follows the same sky position through the frames.
+21. [✔] Trail and expected-path toggles (new) (Part D)
+    Draw a line through the dot's positions. Draw a second marker where proper motion says the star should be.
+22. [✔] Hover readout (new) (Part D)
+    Move the mouse over the image to see the pixel's brightness and its RA/Dec.
+23. [✔] Magnifier (new) (Part D)
+    A small zoom lens that enlarges the area under the mouse without reloading.
+24. [✔] GIF download button (#19) (Part D)
+    Add a button that calls the GIF endpoint and saves the file.
+25. [✔] Export CSV button (new) (Part D)
+    Download the marked positions and dates.
+26. [✔] Placeholders for extras (#15-#17) (Part D)
+    Reserve space for the spectrum plot, flags legend and overlay toggle (Aladin Lite or markers).
+27. [✔] "Is it real?" hint (new) (Part D)
+    A small badge on each frame: green = fine, yellow = detector or wavelength changed, red = flagged pixels near the target.
+28. [✔] Design and mobile layout (#20) (Part D)
+    Use a dark theme. Stack controls under the image on phones. Test at narrow widths.
+29. [✔] Polish and accessibility (new) (Part D)
+    Page title and favicon, tooltips on buttons, a "reset view" button, a hidden-until-needed advanced panel, colour-blind-friendly colours, labels for screen readers.
+30. [✔] Beginner tutorial (#20) (Part D)
+    Write a short "how to spot a moving object" panel with simple steps.
+31. [✔] Guided mission (new) (Part D)
+    An interactive step-by-step "find the moving dot" lesson using WISE 0855.
+32. [✔] Practice game page (new) (Part D)
+    Find hidden fake movers in the practice mock data. Shows a score using the answer-check endpoint.
 
 ---
 
 ## 3. BACKEND: After the data comes in
 
-1. [ ] Inspect real files (Part A)
-       Open one real cutout, list extensions and header keywords, update FRAME_FORMAT.md if needed.
+1. [✔] Inspect real files (Part A)
+   Open one real cutout, list extensions and header keywords, update FRAME_FORMAT.md if needed.
 2. [ ] Real image search (#5) (Part A)
        Implement search_images in data_irsa.py with the SIA query (collections from config.SPHEREX_SIA_COLLECTIONS), sorted by t_min.
-3. [ ] Real cutout download (Part A)
-       Implement download_cutout. The link is the SIA access_url plus ?center=RA,DECd&size=DEGREES, verified by download in Backend 26.
-4. [ ] Read real cutouts (Part A)
-       Pull IMAGE, FLAGS, VARIANCE, WCS, DETECTOR and DATE into the frame format.
-5. [ ] Wavelength map (Part A)
-       Read the WCS-WAVE extension to get the wavelength at each pixel.
+3. [✔] Real cutout download (Part A)
+   Implement download_cutout. The link is the SIA access_url plus ?center=RA,DECd&size=DEGREES, verified by download in Backend 26.
+4. [✔] Read real cutouts (Part A)
+   Pull IMAGE, FLAGS, VARIANCE, WCS, DETECTOR and DATE into the frame format.
+5. [✔] Wavelength map (Part A)
+   Read the WCS-WAVE extension to get the wavelength at each pixel.
 6. [ ] Contract test (Part G)
        Check that real frames and mock frames have identical keys and types.
 7. [ ] Cleaning (Part A)

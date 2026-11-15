@@ -17,9 +17,9 @@
 #                     4 = contaminated). Those are certain, they are our own.
 #   REAL_TABLE_DRAFT  the 22 real SPHEREx bits. The NAMES and DESCRIPTIONS are
 #                     copied from docs/real_query_report.txt (the FLAGS header of
-#                     a real cutout). Two things are NOT verified:
-#                       1. that bit n has the value 2**n (assumed, see PROGRESS.md)
-#                       2. the CATEGORY of every bit: that is my own guess.
+#                     a real cutout). 
+#                     Verified (FLAGS header MSKM cards, 6 detectors): bit n = 1<<n.
+#                     NOT verified: the CATEGORY of every bit (my own guess).
 #                     Replace it using the table in IRSA's SPHEREx Explanatory
 #                     Supplement (after-data #7 and #17).
 #

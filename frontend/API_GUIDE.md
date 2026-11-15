@@ -96,19 +96,29 @@ Base: same origin as the page (http://127.0.0.1:8000). Full interactive docs: /d
 ## NOT available yet (do not build against these)
 
 - Colour picture: function exists, no endpoint.
-- Spectrum, overlays: no endpoints. (flags and “is it real?” now exist).
+- Spectrum, overlays: no endpoints. (flags and "is it real?" now exist).
 - Practice game frames: practice files are not served (only /api/practice/check works).
 - Brightness clip levels (black/white point): no parameter.
+- Real SPHEREx data: see below.
 
-## Current data situation (Backend 25-27)
+## Current data situation (after-data #1, #3, #4, #5)
 
 - config.USE_MOCK = True: only the WISE 0855 preset (year-2026 position) returns
   frames. The other 4 presets give 404. This is expected; show the detail message.
 - USE_MOCK = False currently gives 501 "Real data is not connected yet".
+  The backend can now download and read single real cutouts, but it cannot
+  serve a real frame list yet (it still needs a frame limit, robust downloads and
+  re-aligning). Nothing changes for the page until then.
 - `source` in /api/frames is the cache label ("mock" now, later the release name).
   Show it in the info panel.
-- Real data will differ (Backend 26 findings): ~258 images per position
-  (not 12), cutouts differ by a pixel in size, each download takes 13-27 s,
-  and wavelength varies per frame. So the page will later need progress text,
-  a frame limit and retry (Frontend Section 4, tasks 6-7).
-- Hover/marker maths assume north up and east left. Recheck on real data.
+- Real data will differ (checked on 6 real files): about 258 images per position
+  (not 12), cutouts differ by a pixel in size, each download takes 10-30 s,
+  and the wavelength differs per frame (and by 0.01-0.05 um across one picture;
+  wavelength_um in the frame list is the value at the centre). So the page will
+  later need progress text, a frame limit and retry (Frontend Section 4, tasks 6-7).
+- Real frames are rotated by about 160 degrees on the detector (not north-up). The
+  backend will re-align them onto one north-up grid first, so the API still promises
+  north up and east left, and the PNG, png_x/png_y and the hover/marker maths stay as
+  described above. Recheck once real frames are served.
+- The real search service (IRSA SIA) answered 502 on 2026-11-15; if it is down,
+  real-data requests will answer 504 with a friendly message.

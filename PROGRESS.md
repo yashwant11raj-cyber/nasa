@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Backend after-data, task 1
+Backend after-data, tasks 1, 3, 4, 5 done; task 2 written but not proven (IRSA search service down)
 
 ## Done
 
@@ -52,6 +52,9 @@ Backend after-data, task 1
 - Extra (after Backend 39): GET /api/trail?ra=..&dec=..&fov=..&mode=..&combine=..&group=.. in main.py. Same checks as /api/frames (check_request, frames_for, stack_for), returns processing.find_moving_dot() results, one entry per frame, numbered like /api/frames: index, obs_time (ISO), found, x, y, png_x, png_y, ra_deg, dec_deg, snr. Fewer than 3 frames, or frames of different sizes, give HTTP 400 with the friendly message. test_trail_api.py checks it (route part + server part).
 - Extra: GET /api/resolve?name=.. in main.py. Uses names.resolve_name with year=2026.0 (RESOLVE_YEAR), so local targets match /api/targets?year=2026. Returns ra_deg, dec_deg, label, source ("local" or "online"), target_id (None for online). NameSearchError gives HTTP 404 with its friendly message; an empty name or one longer than 100 characters (NAME_MAX_CHARS) gives HTTP 400; a missing name gives 422. The work is in resolve_name_address(), a plain function, so test_resolve_api.py tests it with fake online lookups and the server part only uses built-in names: no test uses the internet.
 - Extra: GET /api/flags?ra=&dec=&fov=&mode=&combine=&group= in main.py. It uses the same checks and frame numbering as /api/frames. Per frame it returns index, status, reasons, detector_changed, wavelength_changed, flagged_names (from realcheck.check_frames), and flag_counts, bad_fraction, contaminated_fraction (from flags.frame_summary; null if a frame has no flags). It also returns legend (flags.legend()). Dot positions come from processing.find_moving_dot. With fewer than 3 frames, frames of different sizes, or no dot found, positions are None, so the status can still be yellow or grey. test_flags_api.py checks it (route part + server part).
+- After-data #3, #4, #5 (checked on real data, 2026-11-15, try_saved_cutouts.py): download_cutout downloaded the known D3 link in 17.8 s on the first try, and its FLAGS equal the saved D3 file. read_cutout turned all six saved cutouts (one per detector) into frames: exact FRAME_KEYS, detector int, report shapes, float64/int32/float64 native arrays, naive 2025 obs_time from DATE-OBS, centre wavelength equal to the report to 4 decimals. wavelength_map gave a finite per-pixel map of the right shape for all six (corner pixel (x=0, y=0) equals the report; ranges inside the band edges). A real frame with a SIP WCS survives pickle (cache.py). data_irsa.py also has centre_wavelength and mjd_to_datetime. test_data_irsa.py (offline, fakes) was rewritten.
+- After-data #1 (inspect real files): done from docs/real_files_report.txt (inspect_real_files.py, all six detectors). Results are in docs/DATA_NOTES.md (section "After-data #1"). FRAME_FORMAT.md got an "Extra rules found in the real files" section. flags.py: comment fixed (bit n = 1<<n is now verified).
+- After-data #2 (search_images, written, NOT proven on real data): IRSA's SIA service answered 502 Proxy Error on its capabilities endpoint (2026-11-15, same day as the TAP 502). The planned error path worked: 3 tries, then TimeoutError. try_real_frames.py will prove the search and the full chain once IRSA answers.
 
 ## In progress
 
@@ -59,7 +62,7 @@ Backend after-data, task 1
 
 ## Next step
 
-- Inspect real files (after-data #1), then #2 search, #3 download, #4 read.
+- Re-run python try_real_frames.py when IRSA's SIA search answers again (proves #2 and the whole search -> download -> read chain), then tick #2. After that: #6 contract test, #7 cleaning, #8 sort/group/limit, #9 skip mostly-bad frames, #10 robust downloading. Re-aligning frames onto one north-up grid (#30) is needed before real pictures are shown.
 
 ## Decisions made
 
@@ -135,11 +138,11 @@ Backend after-data, task 1
 - A cutout link is the SIA access_url plus ?center=RA,DECd&size=SIZE. size is in DEGREES (0.1 gave 58-59 pixels of 6.15 arcsec, so 0.1 deg = 6 arcmin). Verified by download.
 - Observation time: SIA column t_min is an MJD (60800.700028 = 2025-05-05T16:48:02, equal to the header cards MJD-OBS and DATE-OBS). The IMAGE header also has DATE-BEG, DATE-AVG, DATE-END and TIMESYS=UTC. The DATE card is the PROCESSING date (2026-07-17 for a 2025-05-05 observation), NOT the observation time.
 - Bandpass names are SPHEREx-D1 to SPHEREx-D6 (confirmed in the SIA results: 36, 48, 45, 36, 48, 45 images, 258 in total).
-- Real cutout structure: PRIMARY (no data, has VERSION), IMAGE (MJy/sr), FLAGS (int32), VARIANCE, ZODI, EPSF, WCS-WAVE, all the same size inside one cutout. The FLAGS header keeps the flag table: 22 bits (MSKN/MSKD cards: 0, 1, 2, 6, 7, 9, 10, 11, 12, 14, 15, 17, 19-28). I assume bit n has value 2\*\*n (not checked).
+- Real cutout structure: PRIMARY (no data, has VERSION), IMAGE (MJy/sr), FLAGS (int32), VARIANCE, ZODI, EPSF, WCS-WAVE, all the same size inside one cutout. The FLAGS header keeps the flag table: 22 bits (MSKN/MSKD cards: 0, 1, 2, 6, 7, 9, 10, 11, 12, 14, 15, 17, 19-28). verified by the MSKM header cards.
 - A cutout is centred within about 0.5 pixel of the requested position; the pixel scale is 6.15 to 6.16 arcsec (the mock uses 6.2).
 - Real image search is LIVE: search uses SIA for now, because TAP failed twice with 502. (it sees new weekly data right after ingestion; SIA lags about a day). The query is not filtered by release, so new data needs no code change. To start a fresh cache for a new release, change RELEASE_NAME (one line).
 - Only numbers (range-checked) and a bandpass matching SPHEREx-D1..D6 are put into the query text.
-- Flag tables are keyed by bit NUMBER; the value is 1 << bit. The real table assumes bit n = 2\*\*n (still unchecked). Real categories (bad/contaminated/info) are my guesses: replace them with the IRSA Explanatory Supplement table (after-data #7, #17).
+- Flag tables are keyed by bit NUMBER; the value is 1 << bit. verified by the MSKM header cards. Real categories (bad/contaminated/info) are my guesses: replace them with the IRSA Explanatory Supplement table (after-data #7, #17).
 - Frame quality: only pixels with data are counted; the NaN edge of a cutout is "no data", not "bad data". Cosmic rays count as "bad" in the mock table.
 - "Is it real?" colours: red > yellow > green; grey = could not check. Positions are passed in (find_moving_dot or locate_in_frames), never computed inside realcheck.py. "Near" uses image[y, x] with y counted from the bottom row, like the rest of the project.
 - Spectrum reading = mean of a small square of pixels, leaving out NaN and "bad"-flagged pixels (contaminated pixels are kept). Spectra are sorted by wavelength. No background subtraction yet.
@@ -156,6 +159,14 @@ Backend after-data, task 1
 - /api/resolve: local names use the 2026.0 position (what the page needs for /api/frames); online names are whatever the service gives (no proper-motion correction, and they are J2000-ish, so a fast mover found online may be off). The label of an online result is the text the visitor typed, so the page must show it as plain text, never as HTML.
 - /api/flags takes no stretch, match or ref (they don’t change flags). In mode=difference it is worked out on the raw frames, like /api/trail. mode=stack gives the stacked frame numbers, with flags OR-ed.
 - The legend follows flags.active_table(): mock bits while USE_MOCK = True, the draft real table afterwards.
+- Real FLAGS: bit n = 1<<n is VERIFIED by the MSKM header cards. Arrays from the files are big-endian; read_cutout converts to native (image/variance float64, flags int32).
+- Real WCS: rotated by about 160 deg, SIP distortion, not mirrored. A real frame keeps its own raw WCS; re-aligning onto one north-up grid is after-data #30. The frame list and PNG promise north up only after that.
+- Observation time of a real frame = IMAGE header DATE-OBS (naive UTC), equal to the SIA t_min. Never the DATE card.
+- Search uses SIA (sia_function and sleep can be replaced by tests). download_cutout only accepts links that start with https://irsa.ipac.caltech.edu/. TimeoutError is the error for "IRSA keeps failing" so main.frames_for can answer 504.
+- wavelength_map is a separate function, not a frame key (the frame format stays the same).
+- get_frames in data_irsa.py stays NotImplementedError until #8 (limit), #10 (parallel and robust downloads) and #30 (re-align) exist: otherwise one request downloads 258 cutouts one by one.
+- wavelength_map uses the WCS "W" with whole pixel arrays and falls back to one pixel at a time (not told apart by the check). It is not a frame key; the frame format is unchanged.
+- The cutouts are read from disk in try_saved_cutouts.py the same way download_cutout reads them (every extension loaded, file closed, HDUList used afterwards). This works.
 
 ## Known problems
 
@@ -172,7 +183,7 @@ Backend after-data, task 1
 - config.py uses DEFAULT_FOV_ARCMIN (arcminutes) from the start; the old degrees version is not carried over
 - MAX_FRAMES = 50 is a guess. RELEASE_NAME is now “spherex_dr1_qr3”, a cache label.
 - cache.py is not used by anything yet; the Frames endpoint (Backend 9) will call get_or_load. config.py's CACHE_DIR is used by cache.py.
-- Real data returns 501 until data_irsa.py exists (Backend 25).
+- Real data returns 501 until get_frames is written (needs #8, #10, #30)
 - FOV limits are enforced by params.py (from config.py).
 - A "+" in a URL means a space, so +04d41m36s loses its sign (still positive).
 - Online name lookup (SkyCoord.from_name) is untested against the real service; CDS was down at the last check. names.py cannot tell "unknown name" from "service down", so its message covers both.
@@ -217,17 +228,16 @@ Backend after-data, task 1
 - HIT_RADIUS_ARCSEC = 15 (about 2.4 mock pixels) is a guess; retune when the game page exists. The very fast mover D moves 4.7 pixels per frame, so a click placed on where it was in the previous frame is a miss, as intended.
 - answers.json is read on every request (a tiny file), so there is no stale cache, but it is also not protected: anyone with access to the data/ folder can read the answers. Only static/ is served by the web server.
 - The practice frames themselves are not yet served by the API (see Backend 23 known problem), so the practice game cannot be played in the browser yet.
-- data_irsa.py is a skeleton: real data still gives 501. Unverified: unit/format of the archive's observation time (time_bounds_lower), which header card holds the observation time (the DATE card in the tutorial looks like a processing date), and whether cutout size= is in degrees. Task 26 should settle these.
+- Settled in Backend 26 and after-data #1: t_min is an MJD, DATE-OBS is the observation time, size is in degrees. data_irsa.py now searches, downloads and reads cutouts, but get_frames is not written.
 - IRSA's TAP service failed on 2026-11-15: the synchronous query ran about 400 s and then gave "502 Proxy Error" (twice). The asynchronous TAP route (pyvo run_async) was not tried. Cause unknown (IRSA load or the query itself). Retest later before dropping TAP.
 - Real cutouts are NOT the same size: 59x58, 59x59 and 58x58 pixels for the same 6 arcmin request. Difference, stack, trail and colour picture (which need identical sizes and pixel grids) would give HTTP 400 on real data. Frames must be reprojected onto one grid first (after-data #11).
 - One position gives 258 images over 12 months (6 detectors, different wavelengths), not 12 frames like the mock. MAX_FRAMES = 50 is not enforced yet. A sensible default (for example one detector at a time) is needed (after-data #8).
 - Downloads are slow: 13.5, 18.5 and 26.8 s per cutout, and one needed a retry after an HTTPError. Done serially, 258 cutouts would take well over an hour, so downloads must run in parallel, retry, be cached, and the 5 demo targets should be pre-cached (after-data #10 and #27).
-- The wavelength at the target depends on where it lands on the detector and differs between frames of the same detector (4.9674 vs 5.0034 um for two D6 frames), and 5.0034 is slightly above the nominal band edge of 5.00. A frame's wavelength_um is the value at the cutout centre only.
-- astropy prints a long INFO message about missing "-SIP" in CTYPE for every cutout (the IRSA tutorial says this comes from the spectral WCS). Harmless, but noisy; silence it when the real reader is written.
-- The IRSA tutorial's example header has a rotated pixel grid (PC matrix with off-diagonal terms), so real pictures are probably NOT north-up like the mock. Not checked in our run. The hover and marker maths assume north up (see Decisions); recheck (after-data #11).
-- DETECTOR prints as 3 / 6; whether it is stored as a number or text was not checked: use int().
+- The wavelength at the target depends on where it lands on the detector and differs between frames of the same detector (4.9674 vs 5.0034 um for two D6 frames), and 5.0034 is slightly above the nominal band edge of 5.00. A frame's wavelength_um is the value at the cutout centre only.Per-pixel values: data_irsa.wavelength_map; the spread across a cutout is 0.012 to 0.045 um, mostly along y.
+- The IRSA tutorial's example header has a rotated pixel grid (PC matrix with off-diagonal terms), so real pictures are probably NOT north-up like the mock. Checked: all six detectors are rotated by about 160 degrees (see DATA_NOTES.md). The hover and marker maths assume north up (see Decisions); recheck (after-data #11).
+- DETECTOR prints as 3 / 6; It is an int in the IMAGE header.
 - cache.py never expires entries, so a cached position keeps its old frames after new weekly data arrives until RELEASE_NAME is changed or python cache.py clear is run. A maximum cache age would need a go-ahead.
-- The SPHEREx-D1..D6 pattern is inferred from the tutorial's 'SPHEREx-D2' (unverified). Cutout size in degrees is from the tutorial (unverified against the cutout service page). It is not known whether the TAP tables include the deep-survey images.
+- The SPHEREx-D1..D6 pattern is inferred from the tutorial's 'SPHEREx-D2' (Verified: D1 to D6 all occur). Cutout size in degrees is from the tutorial (unverified against the cutout service page). It is not known whether the TAP tables include the deep-survey images.
 - The plan is now SIA with the collections in config.SPHEREX_SIA_COLLECTIONS.
 - IRSA's tutorials show some cutout downloads failing at random (4 of 84 in one run); retries are needed (after-data #10).
 - quality.py and realcheck.py are not connected to main.py (no endpoint, no URL setting). Wiring them needs a go-ahead. If drop_mostly_bad is wired into frames_for, the dropped frames should be reported to the page, and the cache should keep the unfiltered frames.
@@ -252,6 +262,11 @@ Backend after-data, task 1
 - /api/resolve with a name that is not one of the 5 targets calls CDS (SkyCoord.from_name), which was down on 2026-11-15 and has no time limit of its own here; a slow lookup holds one worker thread. A timeout and a request limit are still open (after-data #27). The online path has never been run against the real service. The server part of test_resolve_api.py has not been run by me; run it and note the result.
 - Online names are not on the 5-target list, so with mock data they will give 404 from /api/frames afterwards (no images), which is expected.
 - /api/flags inherits the limits of find_moving_dot and realcheck (one pixel grid, slow movers absorbed by the median, a variable star may be picked as “the dot”). Real flag categories are still guesses (after-data #7, #17, #18). The server part of test_flags_api.py has not been run by me.
+- try_saved_cutouts.py passed everything on the six saved cutouts and one real download. Still UNVERIFIED: search_images against the real service (IRSA 502), whether wavelength_map used the whole-array call or the fallback, and the retry settings (3 tries, 10 s steps, 120 s timeout are guesses; tune in #10). The 502 happened again on the SIA capabilities URL.
+- astropy prints a long INFO message about "-SIP" for each centre_wavelength and wavelength_map call. Confirmed harmless (it comes from the spectral "W" WCS, where sip is set to None). Not silenced yet; do it in a later task (for example #10) with a small edit of \_spectral_wcs.
+- Raw real frames are rotated by about 160 degrees. The PNG flip, hover, marker and expected-path drawing assume north up, so real frames must be re-aligned first (#30). Whether the angle changes much across the 258 exposures is not checked.
+- Bit 21 SOURCE flags 38-55 % of pixels. With the draft categories about 5 % of pixels are bad or contaminated, so the 3-pixel "near the dot" check in realcheck.py will often be red on real data. Retune in after-data #18 (maybe check only bits like OUTLIER/NONFUNC, and check whether Detect Outliers flags a real mover).
+- Each real download also carries the EPSF table (about 4 MB) that we do not use.
 
 ## How to run and test
 

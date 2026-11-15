@@ -7,8 +7,7 @@ date, so a moving or changing object can be spotted like in a short video.
 **Status (read this first)**
 
 - The backend (FastAPI) works on **mock data** (fake FITS files made by `data_mock.py`).
-- **Real SPHEREx data is not connected yet.** With `USE_MOCK = False` in `config.py`
-  every frames request answers HTTP 501. `data_irsa.py` is only a skeleton.
+- **Real SPHEREx data is not connected yet.** With `USE_MOCK = False` in `config.py` every frames request answers HTTP 501. `data_irsa.py` can search, download and read real cutouts, but `get_frames` is not written (it needs a frame limit, robust downloads and re-aligning).
 - The web page (`frontend/`) is built (plain HTML, CSS and JavaScript). Open http://127.0.0.1:8000/ with the server running. Still missing: spectrum plot, flags display, overlays, colour picture, motion trail and the practice game page (the backend has the code but no endpoints for them yet).
 
 ## Setup (Windows, PowerShell)
@@ -106,18 +105,18 @@ parts run too; without it they print SKIPPED. Run a few files only with
 
 ## Files
 
-| File                                              | Job                                                     |
-| ------------------------------------------------- | ------------------------------------------------------- |
-| `main.py`                                         | The web server; only connects the other files           |
-| `params.py`, `coords.py`, `names.py`, `errors.py` | Check and explain what arrives in the web address       |
-| `data_mock.py`, `data_practice.py`                | Fake data and the practice sky                          |
-| `data_irsa.py`                                    | Real data source (skeleton)                             |
-| `cache.py`, `config.py`                           | Saved cutouts and all settings                          |
-| `processing.py`                                   | Cutouts, stretch, difference, stack, trail, colour, PNG |
-| `gif_export.py`, `export_csv.py`                  | GIF and CSV downloads                                   |
-| `flags.py`, `quality.py`, `realcheck.py`,         | Used by main.py (/api/flags)                            |
-| `spectra.py`, `overlays.py`, `movers.py`          | Extras (not connected to `main.py` yet)                 |
-| `targets.py`                                      | The 5 test targets                                      |
+| File                                              | Job                                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------- |
+| `main.py`                                         | The web server; only connects the other files                             |
+| `params.py`, `coords.py`, `names.py`, `errors.py` | Check and explain what arrives in the web address                         |
+| `data_mock.py`, `data_practice.py`                | Fake data and the practice sky                                            |
+| data_irsa.py                                      | Real data source (search, download, read cutouts; get_frames not written) |
+| `cache.py`, `config.py`                           | Saved cutouts and all settings                                            |
+| `processing.py`                                   | Cutouts, stretch, difference, stack, trail, colour, PNG                   |
+| `gif_export.py`, `export_csv.py`                  | GIF and CSV downloads                                                     |
+| `flags.py`, `quality.py`, `realcheck.py`,         | Used by main.py (/api/flags)                                              |
+| `spectra.py`, `overlays.py`, `movers.py`          | Extras (not connected to `main.py` yet)                                   |
+| `targets.py`                                      | The 5 test targets                                                        |
 
 Notes for helpers: `PROGRESS.md` (what is done and what is known to be wrong),
 `FRAME_FORMAT.md` (the frame dictionary), `docs/DATA_NOTES.md` (real data findings),
